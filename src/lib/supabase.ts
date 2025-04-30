@@ -46,3 +46,36 @@ export async function validateSellerCode(code: string) {
     name: data.name
   };
 }
+
+// Función para obtener las comisiones de un vendedor por periodo
+export async function getSellerCommissions(sellerId: string, startDate?: string, endDate?: string) {
+  const { data, error } = await supabase
+    .rpc('get_seller_commissions', {
+      seller_id: sellerId,
+      start_date: startDate,
+      end_date: endDate
+    });
+
+  if (error) {
+    console.error('Error obteniendo comisiones del vendedor:', error);
+    return null;
+  }
+
+  return data && data.length > 0 ? data[0] : null;
+}
+
+// Función para obtener las comisiones de todos los vendedores por periodo
+export async function getAllSellerCommissions(startDate?: string, endDate?: string) {
+  const { data, error } = await supabase
+    .rpc('get_all_seller_commissions', {
+      start_date: startDate,
+      end_date: endDate
+    });
+
+  if (error) {
+    console.error('Error obteniendo comisiones de vendedores:', error);
+    return [];
+  }
+
+  return data || [];
+}

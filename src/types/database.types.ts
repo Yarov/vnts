@@ -39,6 +39,7 @@ export interface Database {
           numeric_code: string
           active: boolean
           created_at: string
+          commission_percentage: number
         }
         Insert: {
           id?: string
@@ -46,6 +47,7 @@ export interface Database {
           numeric_code: string
           active?: boolean
           created_at?: string
+          commission_percentage?: number
         }
         Update: {
           id?: string
@@ -53,6 +55,7 @@ export interface Database {
           numeric_code?: string
           active?: boolean
           created_at?: string
+          commission_percentage?: number
         }
       }
       products: {
@@ -192,6 +195,44 @@ export interface Database {
           created_at: string
           purchase_count: number
           last_purchase: string
+        }[]
+      },
+      get_top_products: {
+        Args: {
+          limit_count?: number
+        }
+        Returns: {
+          id: string
+          name: string
+          quantity: number
+          total: number
+        }[]
+      },
+      get_seller_commissions: {
+        Args: {
+          seller_id: string
+          start_date?: string
+          end_date?: string
+        }
+        Returns: {
+          seller_id: string
+          seller_name: string
+          total_sales: number
+          commission_percentage: number
+          commission_amount: number
+        }[]
+      },
+      get_all_seller_commissions: {
+        Args: {
+          start_date?: string
+          end_date?: string
+        }
+        Returns: {
+          seller_id: string
+          seller_name: string
+          total_sales: number
+          commission_percentage: number
+          commission_amount: number
         }[]
       }
     }

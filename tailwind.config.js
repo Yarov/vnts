@@ -4,24 +4,24 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
         primary: {
-          50: '#f9f2ff',
-          100: '#f7ebfe',
-          200: '#f4e5fe',
-          300: '#f1defe',
-          400: '#d5c9f8',
-          500: '#aaa7f0',
-          600: '#7977e8',
-          700: '#534ae2',
-          800: '#4b43cb',
-          900: '#423bb5',
-          950: '#3a349e',
+          50: '#f5f3ff',
+          100: '#ede9fe',
+          200: '#ddd6fe',
+          300: '#c4b5fd',
+          400: '#a78bfa',
+          500: '#8b5cf6',
+          600: '#7c3aed',
+          700: '#6d28d9',
+          800: '#5b21b6',
+          900: '#4c1d95',
+          950: '#2e1065',
         },
       }
     },
   },
-  plugins: [],
 }

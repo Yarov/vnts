@@ -4,13 +4,15 @@ import {
   CheckCircleIcon,
   BanknotesIcon,
   CreditCardIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
+  UserIcon
 } from '@heroicons/react/24/outline';
 import { useAtom } from 'jotai';
 import { userAtom } from '../../store/auth';
 import { supabase } from '../../lib/supabase';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
+import { Input, TextArea } from '../../components/forms';
 import { Database } from '../../types/database.types';
 
 type Product = Database['public']['Tables']['products']['Row'];
@@ -121,9 +123,9 @@ export default function NewSale() {
     // Proporcionar feedback visual
     const productElement = document.getElementById(`product-${product.id}`);
     if (productElement) {
-      productElement.classList.add('bg-green-50');
+      productElement.classList.add('bg-primary-50');
       setTimeout(() => {
-        productElement.classList.remove('bg-green-50');
+        productElement.classList.remove('bg-primary-50');
       }, 300);
     }
   };
@@ -223,7 +225,7 @@ export default function NewSale() {
         setIsSuccess(true);
         setTimeout(() => {
           resetSale();
-          navigate('/');
+          navigate('/seller');
         }, 2000);
       }
     } catch (error) {
@@ -261,14 +263,13 @@ export default function NewSale() {
             key={product.id}
             id={`product-${product.id}`}
             onClick={() => selectProduct(product)}
-            className={`p-2 bg-white border rounded-lg shadow-sm text-left transition-colors flex flex-col h-24 ${
-              selectedProduct?.id === product.id
-                ? 'border-primary-500 bg-primary-50'
+            className={`p-2 border rounded-lg flex flex-col h-24 transition-colors ${selectedProduct?.id === product.id
+                ? 'border-primary-300 bg-primary-50 shadow-sm'
                 : 'border-gray-200 hover:bg-gray-50'
-            }`}
+              }`}
           >
-            <span className="font-medium text-gray-900 text-sm line-clamp-2">{product.name}</span>
-            <span className="text-primary-600 font-bold mt-1">${Number(product.price).toFixed(2)}</span>
+            <span className="font-medium text-sm line-clamp-2">{product.name}</span>
+            <span className="text-primary-700 font-bold mt-1">${Number(product.price).toFixed(2)}</span>
             <span className="text-xs text-gray-500 mt-auto">{product.category}</span>
           </button>
         ))}
@@ -293,19 +294,33 @@ export default function NewSale() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-4">Nueva Venta</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-1">Nueva Venta</h2>
+          <p className="text-sm text-gray-500">Registra una venta de manera rápida y sencilla</p>
+        </div>
+      </div>
 
       {/* Alertas */}
       {isSuccess && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full text-center">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md w-full shadow-xl">
             <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100">
               <CheckCircleIcon className="h-10 w-10 text-green-600" />
             </div>
-            <h3 className="mt-4 text-lg font-medium text-gray-900">¡Venta realizada con éxito!</h3>
-            <p className="mt-2 text-sm text-gray-500">
+            <h3 className="font-bold text-xl mt-4 text-center">¡Venta realizada con éxito!</h3>
+            <p className="py-4 text-gray-600 text-center">
               La venta ha sido registrada correctamente.
             </p>
+            <div className="flex justify-center mt-2">
+              <div className="flex items-center text-primary-600">
+                <span>Redirigiendo al dashboard</span>
+                <svg className="animate-spin ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -314,36 +329,28 @@ export default function NewSale() {
         <div className="space-y-6">
           {/* Información de cliente */}
           <div>
-            <h3 className="text-lg font-medium mb-3">Referencia de Cliente</h3>
-            <div className="relative">
-              <input
-                ref={clientReferenceRef}
-                type="text"
-                value={clientReference}
-                onChange={(e) => setClientReference(e.target.value)}
-                className={`block w-full px-4 py-3 rounded-lg shadow-sm text-base ${
-                  errors.clientReference
-                    ? 'border-red-300 focus:border-red-300 focus:ring-red-500'
-                    : 'border-gray-300 focus:border-primary-500 focus:ring-primary-500'
-                }`}
-                placeholder="Nombre o identificador del cliente"
-              />
-              {errors.clientReference && (
-                <p className="mt-1 text-sm text-red-600">{errors.clientReference}</p>
-              )}
-            </div>
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Referencia de Cliente</h3>
+            <Input
+              ref={clientReferenceRef}
+              type="text"
+              value={clientReference}
+              onChange={(e) => setClientReference(e.target.value)}
+              placeholder="Identificador del cliente"
+              error={errors.clientReference}
+              icon={<UserIcon className="h-5 w-5 text-gray-400" />}
+            />
           </div>
 
           {/* Productos */}
           <div>
-            <h3 className="text-lg font-medium mb-3">Producto</h3>
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Producto</h3>
 
             {/* Mostrar producto seleccionado */}
             {selectedProduct && (
-              <div className="mb-4 p-3 bg-primary-50 border border-primary-300 rounded-lg">
+              <div className="mb-4 p-3 bg-primary-50 border border-primary-200 rounded-lg">
                 <div className="flex justify-between">
                   <div>
-                    <p className="font-medium text-gray-900">{selectedProduct.name}</p>
+                    <p className="font-medium text-gray-800">{selectedProduct.name}</p>
                     <p className="text-sm text-gray-500">{selectedProduct.category || 'Sin categoría'}</p>
                   </div>
                   <div className="font-bold text-primary-700 text-lg">
@@ -354,19 +361,21 @@ export default function NewSale() {
             )}
 
             {errors.product && (
-              <p className="text-sm text-red-600 mb-2">{errors.product}</p>
+              <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 rounded-md">
+                <p className="text-sm text-red-700">{errors.product}</p>
+              </div>
             )}
 
             {/* Categorías */}
             <div className="mb-3">
-              <div className="flex space-x-2 overflow-x-auto pb-2">
+              <div className="flex flex-wrap gap-2 pb-2">
                 {Object.keys(categorizedProducts).map(category => (
                   <button
                     key={category}
-                    className={`px-3 py-1 rounded-full text-sm whitespace-nowrap ${
+                    className={`px-3 py-1 text-sm font-medium rounded-full ${
                       selectedCategory === category
-                        ? 'bg-primary-100 text-primary-800 border border-primary-300'
-                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-200'
+                      ? 'bg-primary-100 text-primary-800'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                     onClick={() => setSelectedCategory(category)}
                   >
@@ -382,27 +391,29 @@ export default function NewSale() {
 
           {/* Método de pago */}
           <div>
-            <h3 className="text-lg font-medium mb-3">Método de Pago</h3>
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Método de Pago</h3>
 
             {errors.paymentMethod && (
-              <p className="text-sm text-red-600 mb-2">{errors.paymentMethod}</p>
+              <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 rounded-md">
+                <p className="text-sm text-red-700">{errors.paymentMethod}</p>
+              </div>
             )}
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {paymentMethods.map(method => (
                 <button
                   key={method.id}
-                  className={`flex items-center p-3 border rounded-lg ${
+                  className={`flex items-center px-3 py-2 border rounded-md transition-colors ${
                     selectedPaymentMethodId === method.id
-                      ? 'border-primary-500 bg-primary-50 text-primary-700'
-                      : 'border-gray-300 hover:bg-gray-50'
+                    ? 'bg-primary-50 border-primary-300 text-primary-700'
+                    : 'border-gray-300 hover:bg-gray-50 text-gray-700'
                   }`}
                   onClick={() => setSelectedPaymentMethodId(method.id)}
                 >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
+                  <div className={`p-1 rounded-full mr-2 ${
                     selectedPaymentMethodId === method.id
-                      ? 'bg-primary-100 text-primary-600'
-                      : 'bg-gray-100 text-gray-500'
+                    ? 'bg-primary-100'
+                    : 'bg-gray-100'
                   }`}>
                     {renderPaymentMethodIcon(method.id)}
                   </div>
@@ -414,28 +425,28 @@ export default function NewSale() {
 
           {/* Notas */}
           <div>
-            <h3 className="text-lg font-medium mb-3">Notas (opcional)</h3>
-            <textarea
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Notas (opcional)</h3>
+            <TextArea
               rows={3}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="block w-full px-4 py-3 border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 text-base"
               placeholder="Añadir notas o comentarios sobre esta venta..."
-            ></textarea>
+              helperText="Esta información es interna y no se muestra al cliente"
+            />
           </div>
 
           {/* Total y Botón finalizar */}
           <div className="border-t border-gray-200 pt-6 mt-2 flex flex-col sm:flex-row justify-between items-center">
             <div className="mb-4 sm:mb-0">
-              <span className="text-gray-700 text-lg">Total:</span>
-              <span className="ml-2 text-3xl font-bold text-primary-700">${calculateTotal().toFixed(2)}</span>
+              <span className="text-gray-600 text-lg">Total:</span>
+              <span className="ml-2 text-3xl font-bold text-gray-900">${calculateTotal().toFixed(2)}</span>
             </div>
 
             <Button
               variant="primary"
-              className="w-full sm:w-auto px-10 py-4 text-lg font-semibold rounded-lg shadow-md hover:shadow-lg transition-all"
+              className="w-full sm:w-auto px-10 py-3 text-base font-medium"
               onClick={processSale}
-              isLoading={isLoading}
+              loading={isLoading}
               disabled={!selectedProduct}
             >
               Completar Venta

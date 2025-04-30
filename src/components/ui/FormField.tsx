@@ -11,43 +11,42 @@ interface FormFieldProps extends InputHTMLAttributes<HTMLInputElement> {
 const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
   ({ label, error, helper, leftIcon, rightIcon, className = '', ...rest }, ref) => {
     return (
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          {label}
+      <div className="form-control w-full mb-4">
+        <label className="label">
+          <span className="label-text">{label}</span>
         </label>
-        <div className={`relative rounded-md shadow-sm ${error ? 'border-red-300' : ''}`}>
+        <div className="relative">
           {leftIcon && (
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
               {leftIcon}
             </div>
           )}
           <input
             ref={ref}
             className={`
-              w-full rounded-md shadow-sm border-gray-300 
-              focus:ring-primary-500 focus:border-primary-500 
+              input input-bordered w-full
+              ${error ? 'input-error' : ''}
               ${leftIcon ? 'pl-10' : ''} 
               ${rightIcon ? 'pr-10' : ''} 
-              ${error ? 'border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500' : ''}
               ${className}
             `}
             {...rest}
           />
           {rightIcon && (
-            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
               {rightIcon}
             </div>
           )}
         </div>
         {helper && !error && (
-          <p className="mt-1 text-sm text-gray-500">
-            {helper}
-          </p>
+          <label className="label">
+            <span className="label-text-alt">{helper}</span>
+          </label>
         )}
         {error && (
-          <p className="mt-1 text-sm text-red-600">
-            {error}
-          </p>
+          <label className="label">
+            <span className="label-text-alt text-error">{error}</span>
+          </label>
         )}
       </div>
     );

@@ -220,7 +220,7 @@ export default function Products() {
     },
     { 
       header: 'Precio', 
-      accessor: (product: Product) => `$${product.price.toFixed(2)}`,
+      accessor: (product: Product) => `${product.price.toFixed(2)}`,
       className: 'text-right' 
     },
     { 
@@ -230,11 +230,11 @@ export default function Products() {
     { 
       header: 'Estado', 
       accessor: (product: Product) => (
-        <span className={`flex items-center ${product.active ? 'text-green-600' : 'text-red-600'}`}>
+        <span className={`badge ${product.active ? 'badge-success' : 'badge-error'} gap-1`}>
           {product.active ? (
-            <><CheckCircleIcon className="h-5 w-5 mr-1" /> Activo</>
+            <><CheckCircleIcon className="h-4 w-4" /> Activo</>
           ) : (
-            <><XCircleIcon className="h-5 w-5 mr-1" /> Inactivo</>
+            <><XCircleIcon className="h-4 w-4" /> Inactivo</>
           )}
         </span>
       )
@@ -260,7 +260,7 @@ export default function Products() {
             Editar
           </Button>
           <Button
-            variant="danger"
+            variant="error"
             size="sm"
             onClick={() => deleteProduct(product.id)}
             icon={<TrashIcon className="h-4 w-4" />}
@@ -275,13 +275,11 @@ export default function Products() {
 
   return (
     <div>
-      <div className="md:flex md:items-center md:justify-between mb-6">
-        <div className="flex-1 min-w-0">
-          <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-            Gestión de Productos
-          </h2>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold mb-1">Gestión de Productos</h2>
         </div>
-        <div className="mt-4 flex md:mt-0 md:ml-4">
+        <div className="mt-4 md:mt-0">
           <Button
             variant="primary"
             onClick={() => openProductModal()}
@@ -299,7 +297,7 @@ export default function Products() {
             placeholder="Buscar por nombre, categoría o descripción..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            leftIcon={<MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />}
+            leftIcon={<MagnifyingGlassIcon className="h-5 w-5 opacity-70" />}
           />
         </div>
 
@@ -314,106 +312,96 @@ export default function Products() {
 
       {/* Modal de creación/edición de producto */}
       {isModalOpen && (
-        <div className="fixed inset-0 overflow-y-auto z-50">
-          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            {/* Backdrop */}
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-
-            {/* Modal */}
-            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-              <div>
-                <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                  {currentProduct?.id ? 'Editar Producto' : 'Crear Nuevo Producto'}
-                </h3>
-                
-                <form onSubmit={handleSaveProduct}>
-                  <FormField
-                    label="Nombre del producto"
-                    name="name"
-                    value={currentProduct?.name || ''}
-                    onChange={handleInputChange}
-                    error={formErrors.name}
-                    required
-                  />
-                  
-                  <FormField
-                    label="Precio"
-                    name="price"
-                    type="number"
-                    step="0.01"
-                    value={currentProduct?.price || ''}
-                    onChange={handleInputChange}
-                    error={formErrors.price}
-                    required
-                  />
-                  
-                  <FormField
-                    label="Categoría"
-                    name="category"
-                    value={currentProduct?.category || ''}
-                    onChange={handleInputChange}
-                  />
-                  
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Descripción
-                    </label>
-                    <textarea
-                      name="description"
-                      rows={3}
-                      className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                      placeholder="Descripción del producto"
-                      value={currentProduct?.description || ''}
-                      onChange={handleInputChange}
-                    ></textarea>
-                  </div>
-                  
-                  <div className="flex items-center mb-4">
-                    <input
-                      id="active"
-                      name="active"
-                      type="checkbox"
-                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                      checked={currentProduct?.active || false}
-                      onChange={(e) => {
-                        if (currentProduct) {
-                          setCurrentProduct({
-                            ...currentProduct,
-                            active: e.target.checked
-                          });
-                        }
-                      }}
-                    />
-                    <label htmlFor="active" className="ml-2 block text-sm text-gray-900">
-                      Producto activo
-                    </label>
-                  </div>
-                  
-                  <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-                    <Button
-                      type="submit"
-                      variant="primary"
-                      isLoading={isSubmitting}
-                      className="sm:col-start-2"
-                    >
-                      {currentProduct?.id ? 'Guardar cambios' : 'Crear producto'}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={closeModal}
-                      className="mt-3 sm:mt-0 sm:col-start-1"
-                    >
-                      Cancelar
-                    </Button>
-                  </div>
-                </form>
+        <dialog open className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg mb-4">
+              {currentProduct?.id ? 'Editar Producto' : 'Crear Nuevo Producto'}
+            </h3>
+            
+            <form onSubmit={handleSaveProduct}>
+              <FormField
+                label="Nombre del producto"
+                name="name"
+                value={currentProduct?.name || ''}
+                onChange={handleInputChange}
+                error={formErrors.name}
+                required
+              />
+              
+              <FormField
+                label="Precio"
+                name="price"
+                type="number"
+                step="0.01"
+                value={currentProduct?.price || ''}
+                onChange={handleInputChange}
+                error={formErrors.price}
+                required
+              />
+              
+              <FormField
+                label="Categoría"
+                name="category"
+                value={currentProduct?.category || ''}
+                onChange={handleInputChange}
+              />
+              
+              <div className="form-control mb-4">
+                <label className="label">
+                  <span className="label-text">Descripción</span>
+                </label>
+                <textarea
+                  name="description"
+                  rows={3}
+                  className="textarea textarea-bordered"
+                  placeholder="Descripción del producto"
+                  value={currentProduct?.description || ''}
+                  onChange={handleInputChange}
+                ></textarea>
               </div>
-            </div>
+              
+              <div className="form-control mb-4">
+                <label className="label cursor-pointer justify-start gap-2">
+                  <input
+                    type="checkbox"
+                    className="checkbox"
+                    name="active"
+                    checked={currentProduct?.active || false}
+                    onChange={(e) => {
+                      if (currentProduct) {
+                        setCurrentProduct({
+                          ...currentProduct,
+                          active: e.target.checked
+                        });
+                      }
+                    }}
+                  />
+                  <span className="label-text">Producto activo</span>
+                </label>
+              </div>
+              
+              <div className="modal-action">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={closeModal}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  isLoading={isSubmitting}
+                >
+                  {currentProduct?.id ? 'Guardar cambios' : 'Crear producto'}
+                </Button>
+              </div>
+            </form>
           </div>
-        </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={closeModal}>cerrar</button>
+          </form>
+        </dialog>
       )}
     </div>
   );

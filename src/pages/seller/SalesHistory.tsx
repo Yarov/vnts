@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { 
+import {
   FunnelIcon,
   CalendarIcon,
   EyeIcon
@@ -45,22 +45,9 @@ export default function SalesHistory() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [currentSale, setCurrentSale] = useState<SaleWithDetails | null>(null);
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
-  
-  // Filtros
-  const [dateRange, setDateRange] = useState<{
-    start: string | null;
-    end: string | null;
-  }>({
-    start: null,
-    end: null,
-  });
-  const [clientFilter, setClientFilter] = useState('');
-  const [paymentMethodFilter, setPaymentMethodFilter] = useState('');
-  const [minAmountFilter, setMinAmountFilter] = useState('');
-  const [maxAmountFilter, setMaxAmountFilter] = useState('');
-  
+
+
+
   // Obtener el día actual formateado
   const currentDay = format(new Date(), "EEEE d 'de' MMMM", { locale: es });
 
@@ -72,15 +59,12 @@ export default function SalesHistory() {
     }
   }, [user]);
 
-  // Aplicar filtros cuando cambien
-  useEffect(() => {
-    applyFilters();
-  }, [sales, dateRange, clientFilter, paymentMethodFilter, minAmountFilter, maxAmountFilter]);
+
 
   // Función para obtener historial de ventas
   const fetchSalesHistory = async () => {
     setIsLoading(true);
-    
+
     try {
       // Obtener ventas del vendedor
       const { data: salesData, error: salesError } = await supabase
@@ -88,28 +72,28 @@ export default function SalesHistory() {
         .select('id, total, created_at, payment_method_id, client_id, notes')
         .eq('seller_id', user?.id)
         .order('created_at', { ascending: false });
-      
+
       if (salesError) throw salesError;
-      
+
       // Obtener relaciones
       const clientIds = [...new Set((salesData || []).map(s => s.client_id).filter(Boolean))];
       const paymentMethodIds = [...new Set((salesData || []).map(s => s.payment_method_id))];
-      
+
       const [clientsResponse, paymentMethodsResponse] = await Promise.all([
         supabase.from('clients').select('id, name').in('id', clientIds),
         supabase.from('payment_methods').select('id, name').in('id', paymentMethodIds)
       ]);
-      
+
       const clientsMap = (clientsResponse.data || []).reduce((acc, client) => {
         acc[client.id] = client.name;
         return acc;
       }, {});
-      
+
       const paymentMethodsMap = (paymentMethodsResponse.data || []).reduce((acc, pm) => {
         acc[pm.id] = pm.name;
         return acc;
       }, {});
-      
+
       // Formatear ventas
       const formattedSales = (salesData || []).map(sale => ({
         ...sale,
@@ -117,7 +101,7 @@ export default function SalesHistory() {
         payment_method_name: paymentMethodsMap[sale.payment_method_id] || 'Desconocido',
         formatted_date: format(new Date(sale.created_at), 'dd/MM/yyyy HH:mm'),
       }));
-      
+
       setSales(formattedSales);
       setFilteredSales(formattedSales);
     } catch (error) {
@@ -134,7 +118,7 @@ export default function SalesHistory() {
         .from('payment_methods')
         .select('*')
         .order('name');
-      
+
       if (error) throw error;
       setPaymentMethods(data || []);
     } catch (error) {
@@ -149,7 +133,7 @@ export default function SalesHistory() {
         .from('clients')
         .select('*')
         .order('name');
-      
+
       if (error) throw error;
       setClients(data || []);
     } catch (error) {
@@ -157,60 +141,12 @@ export default function SalesHistory() {
     }
   };
 
-  // Aplicar filtros
-  const applyFilters = () => {
-    let filtered = [...sales];
-    
-    // Filtro por fecha
-    if (dateRange.start) {
-      const startDate = new Date(dateRange.start);
-      filtered = filtered.filter(sale => new Date(sale.created_at) >= startDate);
-    }
-    
-    if (dateRange.end) {
-      const endDate = new Date(dateRange.end);
-      endDate.setHours(23, 59, 59, 999); // Final del día
-      filtered = filtered.filter(sale => new Date(sale.created_at) <= endDate);
-    }
-    
-    // Filtro por cliente
-    if (clientFilter) {
-      filtered = filtered.filter(sale => sale.client_id === clientFilter);
-    }
-    
-    // Filtro por método de pago
-    if (paymentMethodFilter) {
-      filtered = filtered.filter(sale => sale.payment_method_id === paymentMethodFilter);
-    }
-    
-    // Filtro por monto mínimo
-    if (minAmountFilter) {
-      const minAmount = parseFloat(minAmountFilter);
-      filtered = filtered.filter(sale => parseFloat(sale.total) >= minAmount);
-    }
-    
-    // Filtro por monto máximo
-    if (maxAmountFilter) {
-      const maxAmount = parseFloat(maxAmountFilter);
-      filtered = filtered.filter(sale => parseFloat(sale.total) <= maxAmount);
-    }
-    
-    setFilteredSales(filtered);
-  };
 
-  // Resetear filtros
-  const resetFilters = () => {
-    setDateRange({ start: null, end: null });
-    setClientFilter('');
-    setPaymentMethodFilter('');
-    setMinAmountFilter('');
-    setMaxAmountFilter('');
-  };
 
   // Ver detalles de una venta
   const viewSaleDetails = async (sale: SaleWithDetails) => {
     setCurrentSale(sale);
-    
+
     try {
       // Obtener items de la venta
       const { data: itemsData, error: itemsError } = await supabase
@@ -220,15 +156,15 @@ export default function SalesHistory() {
           products(name)
         `)
         .eq('sale_id', sale.id);
-      
+
       if (itemsError) throw itemsError;
-      
+
       // Formatear items
       const formattedItems = (itemsData || []).map(item => ({
         ...item,
         product_name: item.products?.name || 'Producto desconocido',
       }));
-      
+
       // Actualizar venta actual con sus items
       setCurrentSale({
         ...sale,
@@ -243,25 +179,25 @@ export default function SalesHistory() {
 
   // Columnas para tabla de ventas
   const salesColumns = [
-    { 
-      header: 'Fecha', 
+    {
+      header: 'Fecha',
       accessor: 'formatted_date',
     },
-    { 
-      header: 'Cliente', 
+    {
+      header: 'Cliente',
       accessor: 'client_name',
     },
-    { 
-      header: 'Método de pago', 
+    {
+      header: 'Método de pago',
       accessor: 'payment_method_name',
     },
-    { 
-      header: 'Total', 
+    {
+      header: 'Total',
       accessor: (sale: SaleWithDetails) => formatCurrency(parseFloat(sale.total)),
       className: 'text-right'
     },
-    { 
-      header: 'Acciones', 
+    {
+      header: 'Acciones',
       accessor: (sale: SaleWithDetails) => (
         <Button
           variant="outline"
@@ -275,41 +211,30 @@ export default function SalesHistory() {
       className: 'text-right'
     },
   ];
-  
+
   // Columnas para tabla de items de venta
   const saleItemsColumns = [
-    { 
-      header: 'Producto', 
+    {
+      header: 'Producto',
       accessor: 'product_name',
     },
-    { 
-      header: 'Cantidad', 
+    {
+      header: 'Cantidad',
       accessor: 'quantity',
       className: 'text-center'
     },
-    { 
-      header: 'Precio', 
+    {
+      header: 'Precio',
       accessor: (item: SaleItem) => formatCurrency(parseFloat(item.price)),
       className: 'text-right'
     },
-    { 
-      header: 'Subtotal', 
+    {
+      header: 'Subtotal',
       accessor: (item: SaleItem) => formatCurrency(parseFloat(item.subtotal)),
       className: 'text-right'
     },
   ];
-  
-  // Opciones para selector de clientes
-  const clientOptions = clients.map(client => ({
-    value: client.id,
-    label: client.name
-  }));
 
-  // Opciones para selector de métodos de pago
-  const paymentMethodOptions = paymentMethods.map(method => ({
-    value: method.id,
-    label: method.name
-  }));
 
   return (
     <div>
@@ -323,87 +248,7 @@ export default function SalesHistory() {
           </p>
         </div>
       </div>
-      
-      {/* Filtros */}
-      <Card className="mb-6">
-        <div className="flex items-center mb-4">
-          <FunnelIcon className="h-5 w-5 text-gray-400 mr-2" />
-          <h3 className="text-lg font-medium">Filtros</h3>
-        </div>
-        
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Fecha inicio
-            </label>
-            <div className="relative">
-              <CalendarIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-              <input
-                type="date"
-                className="pl-10 input w-full"
-                value={dateRange.start || ''}
-                onChange={(e) => setDateRange({ ...dateRange, start: e.target.value || null })}
-              />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Fecha fin
-            </label>
-            <div className="relative">
-              <CalendarIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-              <input
-                type="date"
-                className="pl-10 input w-full"
-                value={dateRange.end || ''}
-                onChange={(e) => setDateRange({ ...dateRange, end: e.target.value || null })}
-              />
-            </div>
-          </div>
-          
-          <Select
-            label="Cliente"
-            options={[{ value: '', label: 'Todos los clientes' }, ...clientOptions]}
-            value={clientFilter}
-            onChange={(e) => setClientFilter(e.target.value)}
-          />
-          
-          <Select
-            label="Método de pago"
-            options={[{ value: '', label: 'Todos los métodos' }, ...paymentMethodOptions]}
-            value={paymentMethodFilter}
-            onChange={(e) => setPaymentMethodFilter(e.target.value)}
-          />
-          
-          <FormField
-            label="Monto mínimo"
-            type="number"
-            placeholder="Min $"
-            value={minAmountFilter}
-            onChange={(e) => setMinAmountFilter(e.target.value)}
-          />
-          
-          <FormField
-            label="Monto máximo"
-            type="number"
-            placeholder="Max $"
-            value={maxAmountFilter}
-            onChange={(e) => setMaxAmountFilter(e.target.value)}
-          />
-          
-          <div className="flex items-end sm:col-span-2">
-            <Button
-              variant="outline"
-              onClick={resetFilters}
-              className="w-full"
-            >
-              Limpiar filtros
-            </Button>
-          </div>
-        </div>
-      </Card>
-      
+
       {/* Tabla de ventas */}
       <Card>
         <div className="mb-4 flex justify-between items-center">
@@ -412,7 +257,7 @@ export default function SalesHistory() {
             {filteredSales.length} venta{filteredSales.length !== 1 ? 's' : ''}
           </p>
         </div>
-        
+
         <Table
           columns={salesColumns}
           data={filteredSales}
@@ -421,7 +266,7 @@ export default function SalesHistory() {
           emptyMessage="No se encontraron ventas con los filtros aplicados"
         />
       </Card>
-      
+
       {/* Modal de detalles de venta */}
       {isDetailModalOpen && currentSale && (
         <div className="fixed inset-0 overflow-y-auto z-50">
@@ -437,7 +282,7 @@ export default function SalesHistory() {
                 <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
                   Detalles de Venta
                 </h3>
-                
+
                 <div className="bg-gray-50 p-4 rounded-lg mb-6 grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-500">Fecha</p>
@@ -462,7 +307,7 @@ export default function SalesHistory() {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="mb-4">
                   <h4 className="font-medium mb-2">Productos</h4>
                   <Table
@@ -472,7 +317,7 @@ export default function SalesHistory() {
                     emptyMessage="No hay productos disponibles"
                   />
                 </div>
-                
+
                 <div className="mt-5">
                   <Button
                     variant="outline"

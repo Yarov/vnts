@@ -5,19 +5,21 @@ interface CardProps {
   children: ReactNode;
   className?: string;
   footer?: ReactNode;
+  actions?: ReactNode;
 }
 
-export default function Card({ title, children, className = '', footer }: CardProps) {
+export default function Card({ title, children, className = '', footer, actions }: CardProps) {
   return (
-    <div className={`bg-white shadow rounded-lg overflow-hidden ${className}`}>
+    <div className={`bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden ${className}`}>
       {title && (
-        <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">{title}</h3>
+        <div className="px-6 py-4 flex items-center justify-between border-b border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+          {actions && <div className="flex space-x-2">{actions}</div>}
         </div>
       )}
-      <div className="px-4 py-5 sm:p-6">{children}</div>
+      <div className="p-6">{children}</div>
       {footer && (
-        <div className="px-4 py-4 sm:px-6 bg-gray-50 border-t border-gray-200">
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
           {footer}
         </div>
       )}

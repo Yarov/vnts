@@ -6,7 +6,8 @@ import {
   TrashIcon,
   CheckCircleIcon,
   XCircleIcon,
-  IdentificationIcon
+  IdentificationIcon,
+  CurrencyDollarIcon
 } from '@heroicons/react/24/outline';
 import { supabase } from '../../lib/supabase';
 import Card from '../../components/ui/Card';
@@ -65,7 +66,8 @@ export default function Sellers() {
       setCurrentSeller({
         name: '',
         numeric_code: '',
-        active: true
+        active: true,
+        commission_percentage: 0
       });
     }
     setIsModalOpen(true);
@@ -86,6 +88,11 @@ export default function Sellers() {
         setCurrentSeller({
           ...currentSeller,
           [name]: checked
+        });
+      } else if (type === 'number') {
+        setCurrentSeller({
+          ...currentSeller,
+          [name]: parseFloat(value)
         });
       } else {
         setCurrentSeller({
@@ -138,7 +145,8 @@ export default function Sellers() {
           .update({
             name: currentSeller.name,
             numeric_code: currentSeller.numeric_code,
-            active: currentSeller.active
+            active: currentSeller.active,
+            commission_percentage: currentSeller.commission_percentage || 0
           })
           .eq('id', currentSeller.id);
         
@@ -150,7 +158,8 @@ export default function Sellers() {
           .insert([{
             name: currentSeller.name,
             numeric_code: currentSeller.numeric_code,
-            active: currentSeller.active
+            active: currentSeller.active,
+            commission_percentage: currentSeller.commission_percentage || 0
           }]);
         
         if (error) throw error;
@@ -219,19 +228,27 @@ export default function Sellers() {
     { 
       header: 'Código', 
       accessor: (seller: Seller) => (
-        <span className="bg-gray-100 rounded-full px-3 py-1 text-sm font-mono">
+        <span className="badge badge-outline font-mono">
           {seller.numeric_code}
+        </span>
+      )
+    },
+    { 
+      header: 'Comisión', 
+      accessor: (seller: Seller) => (
+        <span className="badge badge-outline gap-1">
+          <CurrencyDollarIcon className="h-4 w-4" /> {seller.commission_percentage}%
         </span>
       )
     },
     { 
       header: 'Estado', 
       accessor: (seller: Seller) => (
-        <span className={`flex items-center ${seller.active ? 'text-green-600' : 'text-red-600'}`}>
+        <span className={`badge ${seller.active ? 'badge-success' : 'badge-error'} gap-1`}>
           {seller.active ? (
-            <><CheckCircleIcon className="h-5 w-5 mr-1" /> Activo</>
+            <><CheckCircleIcon className="h-4 w-4" /> Activo</>
           ) : (
-            <><XCircleIcon className="h-5 w-5 mr-1" /> Inactivo</>
+            <><XCircleIcon className="h-4 w-4" /> Inactivo</>
           )}
         </span>
       )
@@ -257,7 +274,7 @@ export default function Sellers() {
             Editar
           </Button>
           <Button
-            variant="danger"
+            variant="error"
             size="sm"
             onClick={() => deleteSeller(seller.id)}
             icon={<TrashIcon className="h-4 w-4" />}
@@ -272,13 +289,11 @@ export default function Sellers() {
 
   return (
     <div>
-      <div className="md:flex md:items-center md:justify-between mb-6">
-        <div className="flex-1 min-w-0">
-          <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-            Gestión de Vendedores
-          </h2>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold mb-1">Gestión de Vendedores</h2>
         </div>
-        <div className="mt-4 flex md:mt-0 md:ml-4">
+        <div className="mt-4 md:mt-0">
           <Button
             variant="primary"
             onClick={() => openSellerModal()}
@@ -296,7 +311,7 @@ export default function Sellers() {
             placeholder="Buscar por nombre o código..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            leftIcon={<MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />}
+            leftIcon={<MagnifyingGlassIcon className="h-5 w-5 opacity-70" />}
           />
         </div>
 
@@ -311,79 +326,82 @@ export default function Sellers() {
 
       {/* Modal de creación/edición de vendedor */}
       {isModalOpen && (
-        <div className="fixed inset-0 overflow-y-auto z-50">
-          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            {/* Backdrop */}
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-
-            {/* Modal */}
-            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-              <div>
-                <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                  {currentSeller?.id ? 'Editar Vendedor' : 'Crear Nuevo Vendedor'}
-                </h3>
-                
-                <form onSubmit={handleSaveSeller}>
-                  <FormField
-                    label="Nombre del vendedor"
-                    name="name"
-                    value={currentSeller?.name || ''}
+        <dialog open className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg mb-4">
+              {currentSeller?.id ? 'Editar Vendedor' : 'Crear Nuevo Vendedor'}
+            </h3>
+            
+            <form onSubmit={handleSaveSeller}>
+              <FormField
+                label="Nombre del vendedor"
+                name="name"
+                value={currentSeller?.name || ''}
+                onChange={handleInputChange}
+                error={formErrors.name}
+                required
+              />
+              
+              <FormField
+                label="Código numérico"
+                name="numeric_code"
+                value={currentSeller?.numeric_code || ''}
+                onChange={handleInputChange}
+                error={formErrors.numeric_code}
+                required
+                maxLength={6}
+                leftIcon={<IdentificationIcon className="h-5 w-5 opacity-70" />}
+                helper="Código de 4-6 dígitos para acceso del vendedor"
+              />
+              
+              <FormField
+                label="Porcentaje de comisión"
+                name="commission_percentage"
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                value={currentSeller?.commission_percentage?.toString() || '0'}
+                onChange={handleInputChange}
+                leftIcon={<CurrencyDollarIcon className="h-5 w-5 opacity-70" />}
+                helper="Porcentaje de comisión por ventas (0-100%)"
+              />
+              
+              <div className="form-control mb-4">
+                <label className="label cursor-pointer justify-start gap-2">
+                  <input
+                    type="checkbox"
+                    className="checkbox"
+                    name="active"
+                    checked={currentSeller?.active || false}
                     onChange={handleInputChange}
-                    error={formErrors.name}
-                    required
                   />
-                  
-                  <FormField
-                    label="Código numérico"
-                    name="numeric_code"
-                    value={currentSeller?.numeric_code || ''}
-                    onChange={handleInputChange}
-                    error={formErrors.numeric_code}
-                    required
-                    maxLength={6}
-                    leftIcon={<IdentificationIcon className="h-5 w-5 text-gray-400" />}
-                    helper="Código de 4-6 dígitos para acceso del vendedor"
-                  />
-                  
-                  <div className="flex items-center mb-4">
-                    <input
-                      id="active"
-                      name="active"
-                      type="checkbox"
-                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                      checked={currentSeller?.active || false}
-                      onChange={handleInputChange}
-                    />
-                    <label htmlFor="active" className="ml-2 block text-sm text-gray-900">
-                      Vendedor activo
-                    </label>
-                  </div>
-                  
-                  <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-                    <Button
-                      type="submit"
-                      variant="primary"
-                      isLoading={isSubmitting}
-                      className="sm:col-start-2"
-                    >
-                      {currentSeller?.id ? 'Guardar cambios' : 'Crear vendedor'}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={closeModal}
-                      className="mt-3 sm:mt-0 sm:col-start-1"
-                    >
-                      Cancelar
-                    </Button>
-                  </div>
-                </form>
+                  <span className="label-text">Vendedor activo</span>
+                </label>
               </div>
-            </div>
+              
+              <div className="modal-action">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={closeModal}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  isLoading={isSubmitting}
+                >
+                  {currentSeller?.id ? 'Guardar cambios' : 'Crear vendedor'}
+                </Button>
+              </div>
+            </form>
           </div>
-        </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={closeModal}>cerrar</button>
+          </form>
+        </dialog>
       )}
     </div>
   );

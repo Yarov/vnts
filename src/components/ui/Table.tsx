@@ -42,7 +42,7 @@ export default function Table<T>({
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        <span className="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"></span>
       </div>
     );
   }
@@ -55,7 +55,6 @@ export default function Table<T>({
             {columns.map((column, index) => (
               <th
                 key={index}
-                scope="col"
                 className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${column.className || ''}`}
               >
                 {column.header}
@@ -75,13 +74,13 @@ export default function Table<T>({
                     return Math.random().toString(36).substring(2, 9); // Fallback to random ID
                   }
                 })()} 
-                className={onRowClick ? 'cursor-pointer hover:bg-gray-50' : ''}
+                className={`${onRowClick ? 'cursor-pointer hover:bg-gray-50' : ''}`}
                 onClick={onRowClick ? () => onRowClick(item) : undefined}
               >
                 {columns.map((column, index) => (
                   <td 
                     key={index} 
-                    className={`px-6 py-4 whitespace-nowrap text-sm text-gray-500 ${column.className || ''}`}
+                    className={`px-6 py-4 whitespace-nowrap text-sm text-gray-800 ${column.className || ''}`}
                   >
                     {renderCell(item, column)}
                   </td>

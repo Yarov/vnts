@@ -5,7 +5,7 @@ Una aplicación web moderna desarrollada con Vite, React, TypeScript y Tailwind 
 ## Características
 
 - **Autenticación dual**: Admin con usuario/contraseña y vendedores con código numérico
-- **Gestión completa**: Productos, vendedores, clientes y métodos de pago
+- **Gestión completa**: Productos, vendedores (con comisiones), clientes y métodos de pago
 - **Registro de ventas**: Interfaz intuitiva para vendedores
 - **Reportes**: Análisis detallado para administradores
 - **Diseño responsive**: Funciona en dispositivos móviles y de escritorio
@@ -113,8 +113,8 @@ yarn build
 ## Flujo de Trabajo
 
 1. **Administrador**:
-   - Gestiona productos, vendedores y métodos de pago
-   - Visualiza reportes y estadísticas
+   - Gestiona productos, vendedores (con porcentajes de comisión) y métodos de pago
+   - Visualiza reportes, estadísticas y comisiones ganadas
    - Monitorea el rendimiento de los vendedores
 
 2. **Vendedor**:
@@ -127,9 +127,9 @@ yarn build
 
 ### Administrador
 
-- **Dashboard**: Resumen de ventas, productos más vendidos, rendimiento de vendedores
+- **Dashboard**: Resumen de ventas, productos más vendidos, rendimiento de vendedores, comisiones diarias
 - **Productos**: CRUD completo de productos con estado activo/inactivo
-- **Vendedores**: Gestión de vendedores y asignación de códigos de acceso
+- **Vendedores**: Gestión de vendedores, asignación de códigos de acceso y porcentajes de comisión
 - **Clientes**: Visualización de clientes y su historial de compras
 - **Métodos de Pago**: Configuración de formas de pago aceptadas
 - **Reportes**: Análisis detallados de ventas por período, vendedor o producto
