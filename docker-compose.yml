@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # Development service
+  app-dev:
+    build:
+      context: .
+      target: build
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+      - VITE_APP_NAME=${VITE_APP_NAME}
+    command: yarn dev --host
+    networks:
+      - vnts-network
+
+  # Production service
+  app-prod:
+    build:
+      context: .
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+      - VITE_APP_NAME=${VITE_APP_NAME}
+    networks:
+      - vnts-network
+
+networks:
+  vnts-network:
+    driver: bridge
