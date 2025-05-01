@@ -1,41 +1,25 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { validateSellerCode } from '../../lib/supabase';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   KeyIcon,
   ArrowRightIcon,
   ExclamationCircleIcon,
   ShoppingCartIcon
 } from '@heroicons/react/24/outline';
+import { useAuth } from '../../hooks/useAuth';
 
-interface SellerLoginPageProps {
-  onLogin: (sellerId: string, sellerName: string) => void;
-}
-
-export default function SellerLoginPage({ onLogin }: SellerLoginPageProps) {
+export default function SellerLoginPage() {
   const [code, setCode] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { loading, error, signInAsSeller } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    try {
-      const seller = await validateSellerCode(code);
-
-      if (!seller) {
-        setError('Código de vendedor no válido');
-        return;
-      }
-
-      onLogin(seller.id, seller.name);
-    } catch (err) {
-      console.error('Error inesperado:', err);
-      setError('Ocurrió un error inesperado.');
-    } finally {
-      setLoading(false);
+    
+    const success = await signInAsSeller(code);
+    
+    if (success) {
+      navigate('/seller');
     }
   };
 

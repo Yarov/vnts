@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
 import {
   EnvelopeIcon,
   LockClosedIcon,
@@ -9,38 +8,23 @@ import {
   UserIcon
 } from '@heroicons/react/24/outline';
 import { Input } from '../../components/forms';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  
+  // Usar el hook de autenticación
+  const { loading, error, signInAsAdmin } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        setError('Error de autenticación: ' + error.message);
-        return;
-      }
-
-      if (data?.user) {
-        navigate('/admin');
-      }
-    } catch (err) {
-      console.error('Error inesperado:', err);
-      setError('Ocurrió un error inesperado.');
-    } finally {
-      setLoading(false);
+    
+    const success = await signInAsAdmin(email, password);
+    
+    if (success) {
+      navigate('/admin');
     }
   };
 

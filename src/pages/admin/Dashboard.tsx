@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import {
   CurrencyDollarIcon,
   ReceiptPercentIcon,
@@ -9,19 +7,12 @@ import {
   CalendarIcon,
   ArrowRightIcon
 } from '@heroicons/react/24/outline';
-import { supabase } from '../../lib/supabase';
 import StatsCard from '../../components/dashboard/StatsCard';
 import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
 import Badge from '../../components/ui/Badge';
-
-// Formatear número como moneda
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: 'MXN'
-  }).format(value);
-};
+import { formatCurrency, formatDate, formatDayMonthLong } from '../../utils/formatters';
+import { getDashboardData } from '../../services/dashboardService';
 
 export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
@@ -39,164 +30,20 @@ export default function Dashboard() {
 
 
   // Obtener el día actual formateado
-  const currentDay = format(new Date(), "EEEE d 'de' MMMM", { locale: es });
+  const currentDay = formatDayMonthLong(new Date());
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       setIsLoading(true);
 
       try {
-        // Obtener resumen de ventas
-        const { data: salesData, error: salesError } = await supabase
-          .from('sales')
-          .select('id, total, created_at');
-
-        if (salesError) throw salesError;
-
-        // Obtener productos
-        const { data: productsData, error: productsError } = await supabase
-          .from('products')
-          .select('id, name')
-          .eq('active', true);
-
-        if (productsError) throw productsError;
-
-        // Calcular resumen de ventas
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-
-        const lastWeek = new Date(today);
-        lastWeek.setDate(lastWeek.getDate() - 7);
-
-        const prevWeek = new Date(lastWeek);
-        prevWeek.setDate(prevWeek.getDate() - 7);
-
-        const todaySales = salesData?.filter(sale =>
-          new Date(sale.created_at) >= today
-        ) || [];
-
-        const yesterdaySales = salesData?.filter(sale =>
-          new Date(sale.created_at) >= yesterday && new Date(sale.created_at) < today
-        ) || [];
-
-        const weeklySales = salesData?.filter(sale =>
-          new Date(sale.created_at) >= lastWeek
-        ) || [];
-
-        const prevWeeklySales = salesData?.filter(sale =>
-          new Date(sale.created_at) >= prevWeek && new Date(sale.created_at) < lastWeek
-        ) || [];
-
-        const totalSalesAmount = salesData?.reduce((sum, sale) => sum + parseFloat(sale.total), 0) || 0;
-        const dailySalesAmount = todaySales.reduce((sum, sale) => sum + parseFloat(sale.total), 0);
-        const yesterdaySalesAmount = yesterdaySales.reduce((sum, sale) => sum + parseFloat(sale.total), 0);
-        const weeklySalesAmount = weeklySales.reduce((sum, sale) => sum + parseFloat(sale.total), 0);
-        const prevWeeklySalesAmount = prevWeeklySales.reduce((sum, sale) => sum + parseFloat(sale.total), 0);
-
-        // Calcular cambios porcentuales
-        const dailyChange = yesterdaySalesAmount === 0
-          ? { value: 100, isPositive: true }
-          : {
-              value: Math.round((dailySalesAmount - yesterdaySalesAmount) / yesterdaySalesAmount * 100 * 10) / 10,
-              isPositive: dailySalesAmount >= yesterdaySalesAmount
-            };
-
-        const weeklyChange = prevWeeklySalesAmount === 0
-          ? { value: 100, isPositive: true }
-          : {
-              value: Math.round((weeklySalesAmount - prevWeeklySalesAmount) / prevWeeklySalesAmount * 100 * 10) / 10,
-              isPositive: weeklySalesAmount >= prevWeeklySalesAmount
-            };
-
-        setSalesSummary({
-          totalSales: totalSalesAmount,
-          dailySales: dailySalesAmount,
-          weeklySales: weeklySalesAmount,
-          productCount: productsData?.length || 0,
-          dailyChange,
-          weeklyChange
-        });
-
-        // Obtener top productos
-        const { data: topProductsData } = await supabase
-          .rpc('get_top_products', { limit_count: 5 });
-
-        setTopProducts(topProductsData || []);
-
-        // Obtener ventas por vendedor
-        const { data: sellerData } = await supabase
-          .from('sales')
-          .select(`
-            seller_id,
-            sellers!inner(name),
-            total
-          `)
-          .gte('created_at', lastWeek.toISOString());
-
-        // Agrupar ventas por vendedor
-        const sellerSalesMap = (sellerData || []).reduce((acc, sale) => {
-          const sellerName = sale.sellers.name;
-
-          if (!acc[sellerName]) {
-            acc[sellerName] = 0;
-          }
-
-          acc[sellerName] += parseFloat(sale.total);
-          return acc;
-        }, {});
-
-        const sellerSalesArray = Object.entries(sellerSalesMap).map(([name, total]) => ({
-          name,
-          total
-        })).sort((a, b) => b.total - a.total);
-
-        setSellerSales(sellerSalesArray);
-
-        // Obtener comisiones de vendedores para hoy
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
-        const tomorrow = new Date(todayStart);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-
-        const { data: commissionData } = await supabase
-          .rpc('get_all_seller_commissions', {
-            start_date: todayStart.toISOString(),
-            end_date: tomorrow.toISOString()
-          });
-
-        setSellerCommissions(commissionData || []);
-
-        // Obtener clientes frecuentes
-        const { data: clientsData } = await supabase
-          .rpc('get_top_clients', { limit_count: 5 });
-
-        setTopClients(clientsData || []);
-
-        // Obtener datos para gráfico de líneas (ventas diarias)
-        const past14Days = Array.from({ length: 14 }, (_, i) => {
-          const date = new Date(now);
-          date.setDate(date.getDate() - (13 - i));
-          return {
-            date,
-            dateStr: format(date, 'yyyy-MM-dd'),
-            formattedDate: format(date, 'dd MMM', { locale: es }),
-            sales: 0
-          };
-        });
-
-        // Agrupar ventas por día
-        salesData?.forEach(sale => {
-          const saleDate = format(new Date(sale.created_at), 'yyyy-MM-dd');
-          const dayData = past14Days.find(d => d.dateStr === saleDate);
-
-          if (dayData) {
-            dayData.sales += parseFloat(sale.total);
-          }
-        });
-
-        setDailySalesData(past14Days);
+        // Usar el servicio para obtener todos los datos del dashboard
+        const dashboardData = await getDashboardData();
+        
+        setSalesSummary(dashboardData.salesSummary);
+        setTopProducts(dashboardData.topProducts || []);
+        setSellerCommissions(dashboardData.sellerCommissions || []);
+        setTopClients(dashboardData.topClients || []);
       } catch (error) {
         console.error('Error al cargar datos del dashboard:', error);
       } finally {
@@ -236,7 +83,7 @@ export default function Dashboard() {
     },
     {
       header: 'Última compra',
-      accessor: (item: any) => format(new Date(item.last_purchase), 'dd/MM/yyyy'),
+      accessor: (item: any) => formatDate(new Date(item.last_purchase), 'dd/MM/yyyy'),
       className: 'text-center'
     }
   ];

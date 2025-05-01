@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
   PlusIcon, 
   MagnifyingGlassIcon,
@@ -7,7 +7,8 @@ import {
   CheckCircleIcon,
   XCircleIcon
 } from '@heroicons/react/24/outline';
-import { supabase } from '../../lib/supabase';
+import { useProducts } from '../../hooks';
+import { createProduct, updateProduct, deleteProduct } from '../../services/productService';
 import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
 import Button from '../../components/ui/Button';
@@ -17,44 +18,21 @@ import { Database } from '../../types/database.types';
 type Product = Database['public']['Tables']['products']['Row'];
 
 export default function Products() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  // Usar nuestro hook personalizado para productos
+  const {
+    products: filteredProducts,
+    loading,
+    searchQuery,
+    searchProducts,
+    refreshProducts
+  } = useProducts();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Partial<Product> | null>(null);
   const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Cargar productos al montar el componente
-  useEffect(() => {
-    fetchProducts();
-  }, []);
 
-  // Función para obtener productos de Supabase
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('name');
-      
-      if (error) throw error;
-      setProducts(data || []);
-    } catch (error) {
-      console.error('Error al cargar productos:', error);
-      alert('Error al cargar productos. Por favor, intenta de nuevo.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Filtrar productos según término de búsqueda
-  const filteredProducts = products.filter(product => 
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (product.description && product.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (product.category && product.category.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
 
   // Abrir modal para crear/editar producto
   const openProductModal = (product?: Product) => {
@@ -131,35 +109,26 @@ export default function Products() {
     try {
       if (currentProduct.id) {
         // Actualizar producto existente
-        const { error } = await supabase
-          .from('products')
-          .update({
-            name: currentProduct.name,
-            price: currentProduct.price,
-            category: currentProduct.category,
-            description: currentProduct.description,
-            active: currentProduct.active
-          })
-          .eq('id', currentProduct.id);
-        
-        if (error) throw error;
+        await updateProduct(currentProduct.id, {
+          name: currentProduct.name || '',
+          price: currentProduct.price || 0,
+          category: currentProduct.category,
+          description: currentProduct.description,
+          active: currentProduct.active
+        });
       } else {
         // Crear nuevo producto
-        const { error } = await supabase
-          .from('products')
-          .insert([{
-            name: currentProduct.name,
-            price: currentProduct.price || 0,
-            category: currentProduct.category,
-            description: currentProduct.description,
-            active: currentProduct.active
-          }]);
-        
-        if (error) throw error;
+        await createProduct({
+          name: currentProduct.name || '',
+          price: currentProduct.price || 0,
+          category: currentProduct.category,
+          description: currentProduct.description,
+          active: currentProduct.active
+        });
       }
       
       // Actualizar lista de productos
-      await fetchProducts();
+      await refreshProducts();
       closeModal();
     } catch (error) {
       console.error('Error al guardar producto:', error);
@@ -172,20 +141,9 @@ export default function Products() {
   // Cambiar estado de un producto (activar/desactivar)
   const toggleProductStatus = async (id: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from('products')
-        .update({ active: !currentStatus })
-        .eq('id', id);
-      
-      if (error) throw error;
-      
-      // Actualizar la lista localmente
-      setProducts(products.map(product => {
-        if (product.id === id) {
-          return { ...product, active: !currentStatus };
-        }
-        return product;
-      }));
+      await updateProduct(id, { active: !currentStatus });
+      // Actualizar la lista de productos
+      refreshProducts();
     } catch (error) {
       console.error('Error al cambiar estado del producto:', error);
       alert('Error al cambiar estado del producto. Por favor, intenta de nuevo.');
@@ -193,19 +151,13 @@ export default function Products() {
   };
 
   // Eliminar un producto
-  const deleteProduct = async (id: string) => {
+  const handleDeleteProduct = async (id: string) => {
     if (!confirm('¿Estás seguro de que deseas eliminar este producto?')) return;
     
     try {
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-      
-      // Actualizar la lista localmente
-      setProducts(products.filter(product => product.id !== id));
+      await deleteProduct(id);
+      // Actualizar la lista de productos
+      refreshProducts();
     } catch (error) {
       console.error('Error al eliminar producto:', error);
       alert('Error al eliminar producto. Por favor, intenta de nuevo.');
@@ -262,7 +214,7 @@ export default function Products() {
           <Button
             variant="error"
             size="sm"
-            onClick={() => deleteProduct(product.id)}
+            onClick={() => handleDeleteProduct(product.id)}
             icon={<TrashIcon className="h-4 w-4" />}
           >
             Eliminar
@@ -295,8 +247,8 @@ export default function Products() {
           <FormField
             label="Buscar productos"
             placeholder="Buscar por nombre, categoría o descripción..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            value={searchQuery}
+            onChange={(e) => searchProducts(e.target.value)}
             leftIcon={<MagnifyingGlassIcon className="h-5 w-5 opacity-70" />}
           />
         </div>

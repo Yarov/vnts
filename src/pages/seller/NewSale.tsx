@@ -9,11 +9,14 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAtom } from 'jotai';
 import { userAtom } from '../../store/auth';
-import { supabase } from '../../lib/supabase';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import { Input, TextArea } from '../../components/forms';
 import { Database } from '../../types/database.types';
+import { getAllProducts } from '../../services/productService';
+import { getAllPaymentMethods } from '../../services/paymentMethodService';
+import { getOrCreateClient } from '../../services/clientService';
+import { processSale } from '../../services/salesService';
 
 type Product = Database['public']['Tables']['products']['Row'];
 type PaymentMethod = Database['public']['Tables']['payment_methods']['Row'];
@@ -82,14 +85,8 @@ export default function NewSale() {
   // Obtener productos
   const fetchProducts = async () => {
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('active', true)
-        .order('name');
-
-      if (error) throw error;
-      setProducts(data || []);
+      const data = await getAllProducts(true);
+      setProducts(data);
     } catch (error) {
       console.error('Error al cargar productos:', error);
     }
@@ -98,17 +95,11 @@ export default function NewSale() {
   // Obtener métodos de pago
   const fetchPaymentMethods = async () => {
     try {
-      const { data, error } = await supabase
-        .from('payment_methods')
-        .select('*')
-        .eq('active', true)
-        .order('name');
-
-      if (error) throw error;
-      setPaymentMethods(data || []);
+      const data = await getAllPaymentMethods(true);
+      setPaymentMethods(data);
 
       // Establecer el primer método como predeterminado
-      if (data && data.length > 0) {
+      if (data.length > 0) {
         setSelectedPaymentMethodId(data[0].id);
       }
     } catch (error) {
@@ -157,76 +148,49 @@ export default function NewSale() {
   };
 
   // Procesar venta
-  const processSale = async () => {
+  const handleSale = async () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
 
     try {
       // Crear/buscar cliente
-      const { data: clientData, error: clientError } = await supabase
-        .from('clients')
-        .select('*')
-        .eq('reference', clientReference.trim())
-        .maybeSingle();
+      const client = await getOrCreateClient(clientReference.trim());
+      if (!client) throw new Error('Error al obtener o crear el cliente');
 
-      let clientId;
-
-      if (clientError) throw clientError;
-
-      if (clientData) {
-        // Cliente existente
-        clientId = clientData.id;
-      } else {
-        // Crear nuevo cliente
-        const { data: newClient, error: newClientError } = await supabase
-          .from('clients')
-          .insert([{
-            name: clientReference.trim(), // Usamos la referencia como nombre también
-            reference: clientReference.trim()
-          }])
-          .select()
-          .single();
-
-        if (newClientError) throw newClientError;
-        clientId = newClient?.id;
-      }
-
-      // Crear venta
-      const { data: saleData, error: saleError } = await supabase
-        .from('sales')
-        .insert([{
+      // Preparar datos de la venta
+      if (selectedProduct) {
+        const saleData = {
           seller_id: user?.id || '',
-          client_id: clientId,
+          client_id: client.id,
           payment_method_id: selectedPaymentMethodId,
           total: calculateTotal(),
-          notes: notes.trim() || null
-        }])
-        .select()
-        .single();
+          notes: notes.trim() || null,
+          items: [
+            {
+              product_id: selectedProduct.id,
+              product_name: selectedProduct.name,
+              quantity: 1,
+              price: Number(selectedProduct.price),
+              subtotal: Number(selectedProduct.price)
+            }
+          ],
+          client_name: client.name
+        };
 
-      if (saleError) throw saleError;
-
-      if (saleData && selectedProduct) {
-        // Crear item de venta
-        const { error: itemsError } = await supabase
-          .from('sale_items')
-          .insert([{
-            sale_id: saleData.id,
-            product_id: selectedProduct.id,
-            quantity: 1,
-            price: Number(selectedProduct.price),
-            subtotal: Number(selectedProduct.price)
-          }]);
-
-        if (itemsError) throw itemsError;
-
-        // Mostrar éxito y resetear
-        setIsSuccess(true);
-        setTimeout(() => {
-          resetSale();
-          navigate('/seller');
-        }, 2000);
+        // Usar el servicio para procesar la venta
+        const result = await processSale(saleData);
+        
+        if (result) {
+          // Mostrar éxito y resetear
+          setIsSuccess(true);
+          setTimeout(() => {
+            resetSale();
+            navigate('/seller');
+          }, 2000);
+        } else {
+          throw new Error('Error al procesar venta');
+        }
       }
     } catch (error) {
       console.error('Error al procesar venta:', error);
@@ -453,7 +417,7 @@ export default function NewSale() {
               <Button
                 variant="primary"
                 className="w-full sm:w-auto px-10 py-3 text-base font-medium"
-                onClick={processSale}
+                onClick={handleSale}
                 loading={isLoading}
                 disabled={!selectedProduct}
               >
