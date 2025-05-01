@@ -442,15 +442,24 @@ export default function NewSale() {
               <span className="ml-2 text-3xl font-bold text-gray-900">${calculateTotal().toFixed(2)}</span>
             </div>
 
-            <Button
-              variant="primary"
-              className="w-full sm:w-auto px-10 py-3 text-base font-medium"
-              onClick={processSale}
-              loading={isLoading}
-              disabled={!selectedProduct}
-            >
-              Completar Venta
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto px-10 py-3 text-base font-medium"
+                onClick={() => navigate('/seller')}
+              >
+                Cancelar Venta
+              </Button>
+              <Button
+                variant="primary"
+                className="w-full sm:w-auto px-10 py-3 text-base font-medium"
+                onClick={processSale}
+                loading={isLoading}
+                disabled={!selectedProduct}
+              >
+                Completar Venta
+              </Button>
+            </div>
           </div>
         </div>
       </Card>

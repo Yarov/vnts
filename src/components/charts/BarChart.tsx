@@ -22,27 +22,50 @@ ChartJS.register(
 
 interface BarChartProps {
   title?: string;
-  labels: string[];
-  datasets: {
+  data?: {
+    labels: string[];
+    datasets: {
+      label: string;
+      data: number[];
+      backgroundColor?: string;
+      borderColor?: string;
+      borderWidth?: number;
+    }[];
+  };
+  labels?: string[];
+  datasets?: {
     label: string;
     data: number[];
     backgroundColor?: string;
     borderColor?: string;
     borderWidth?: number;
   }[];
+  options?: any;
   yAxisLabel?: string;
   className?: string;
 }
 
 export default function BarChart({
   title,
-  labels,
-  datasets,
+  data,
+  labels: propLabels,
+  datasets: propDatasets,
+  options: customOptions,
   yAxisLabel = '',
   className = '',
 }: BarChartProps) {
+  // Manejo de propiedades alternativas (retrocompatibilidad)
+  const useNewApi = !!data;
+  const chartLabels = useNewApi ? data?.labels : propLabels;
+  const chartDatasets = useNewApi ? data?.datasets : propDatasets;
+  
+  // Si no hay datos, devolver un div vacío
+  if (!chartLabels || !chartDatasets || chartLabels.length === 0) {
+    console.warn('BarChart: Missing or empty data');
+    return <div className={className}></div>;
+  }
   // Configuración de opciones
-  const options: ChartOptions<'bar'> = {
+  const defaultOptions: ChartOptions<'bar'> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -128,10 +151,16 @@ export default function BarChart({
     }
   };
 
+  // Combinar las opciones personalizadas con las predeterminadas
+  const mergedOptions = {
+    ...defaultOptions,
+    ...customOptions
+  };
+
   // Datos formateados para Chart.js
-  const data = {
-    labels,
-    datasets: datasets.map(dataset => ({
+  const chartData = {
+    labels: chartLabels,
+    datasets: chartDatasets.map(dataset => ({
       label: dataset.label,
       data: dataset.data,
       backgroundColor: dataset.backgroundColor || 'rgba(124, 58, 237, 0.7)',
@@ -144,7 +173,7 @@ export default function BarChart({
 
   return (
     <div className={className}>
-      <Bar options={options} data={data} />
+      <Bar options={mergedOptions} data={chartData} />
     </div>
   );
 }

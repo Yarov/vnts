@@ -6,16 +6,11 @@ import {
   ReceiptPercentIcon,
   ShoppingBagIcon,
   UserGroupIcon,
-  ChartBarIcon,
   CalendarIcon,
-  ArrowUpIcon,
-  ArrowDownIcon,
   ArrowRightIcon
 } from '@heroicons/react/24/outline';
 import { supabase } from '../../lib/supabase';
 import StatsCard from '../../components/dashboard/StatsCard';
-import BarChart from '../../components/charts/BarChart';
-import LineChart from '../../components/charts/LineChart';
 import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
 import Badge from '../../components/ui/Badge';
@@ -39,11 +34,9 @@ export default function Dashboard() {
     weeklyChange: { value: 0, isPositive: true }
   });
   const [topProducts, setTopProducts] = useState<any[]>([]);
-  const [sellerSales, setSellerSales] = useState<any[]>([]);
   const [sellerCommissions, setSellerCommissions] = useState<any[]>([]);
   const [topClients, setTopClients] = useState<any[]>([]);
-  const [dailySalesData, setDailySalesData] = useState<any[]>([]);
-  const [timeFilter, setTimeFilter] = useState('week');
+
 
   // Obtener el día actual formateado
   const currentDay = format(new Date(), "EEEE d 'de' MMMM", { locale: es });
@@ -160,19 +153,19 @@ export default function Dashboard() {
         })).sort((a, b) => b.total - a.total);
 
         setSellerSales(sellerSalesArray);
-        
+
         // Obtener comisiones de vendedores para hoy
         const todayStart = new Date();
         todayStart.setHours(0, 0, 0, 0);
         const tomorrow = new Date(todayStart);
         tomorrow.setDate(tomorrow.getDate() + 1);
-        
+
         const { data: commissionData } = await supabase
           .rpc('get_all_seller_commissions', {
             start_date: todayStart.toISOString(),
             end_date: tomorrow.toISOString()
           });
-          
+
         setSellerCommissions(commissionData || []);
 
         // Obtener clientes frecuentes
@@ -213,35 +206,6 @@ export default function Dashboard() {
 
     fetchDashboardData();
   }, []);
-
-  // Configuración para gráfico de vendedores
-  const sellerChartData = {
-    labels: sellerSales.map(seller => seller.name),
-    datasets: [
-      {
-        label: 'Ventas ($)',
-        data: sellerSales.map(seller => seller.total),
-        backgroundColor: 'rgba(124, 58, 237, 0.7)',
-        borderColor: '#7c3aed',
-        borderWidth: 1,
-      }
-    ]
-  };
-
-  // Configuración para gráfico de líneas (ventas diarias)
-  const salesLineChartData = {
-    labels: dailySalesData.map(day => day.formattedDate),
-    datasets: [
-      {
-        label: 'Ventas diarias',
-        data: dailySalesData.map(day => day.sales),
-        borderColor: 'rgb(124, 58, 237)',
-        backgroundColor: 'rgba(124, 58, 237, 0.2)',
-        tension: 0.3,
-        fill: true,
-      }
-    ]
-  };
 
   // Columnas para tabla de productos
   const productColumns = [
@@ -323,115 +287,6 @@ export default function Dashboard() {
           className="bg-gradient-to-br from-purple-50 to-white"
         />
       </div>
-
-      {/* Gráfico de tendencia de ventas */}
-      <Card
-        title="Tendencia de Ventas"
-        className="mb-6"
-        actions={
-          <button className="text-xs text-purple-600 hover:text-purple-800 flex items-center">
-            Ver detalles <ArrowRightIcon className="h-3 w-3 ml-1" />
-          </button>
-        }
-      >
-        {isLoading ? (
-          <div className="flex justify-center py-8">
-            <span className="h-8 w-8 animate-spin rounded-full border-4 border-purple-200 border-t-purple-600"></span>
-          </div>
-        ) : (
-          <div className="h-72">
-            <LineChart
-              labels={salesLineChartData.labels}
-              datasets={salesLineChartData.datasets}
-            />
-          </div>
-        )}
-      </Card>
-
-      {/* Gráfico de ventas por vendedor y tabla de productos más vendidos */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <Card
-          title="Ventas por Vendedor"
-          className="h-full"
-          actions={
-            <button className="text-xs text-purple-600 hover:text-purple-800 flex items-center">
-              Ver detalle <ArrowRightIcon className="h-3 w-3 ml-1" />
-            </button>
-          }
-        >
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <span className="h-8 w-8 animate-spin rounded-full border-4 border-purple-200 border-t-purple-600"></span>
-            </div>
-          ) : (
-            <div className="h-72">
-              <BarChart
-                labels={sellerChartData.labels}
-                datasets={sellerChartData.datasets}
-                yAxisLabel=""
-              />
-            </div>
-          )}
-        </Card>
-
-        {/* Tabla de productos más vendidos */}
-        <Card
-          title="Productos Más Vendidos"
-          className="h-full"
-          actions={
-            <button className="text-xs text-purple-600 hover:text-purple-800 flex items-center">
-              Ver todos <ArrowRightIcon className="h-3 w-3 ml-1" />
-            </button>
-          }
-        >
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <span className="h-8 w-8 animate-spin rounded-full border-4 border-purple-200 border-t-purple-600"></span>
-            </div>
-          ) : (
-            <Table
-              columns={productColumns}
-              data={topProducts}
-              keyExtractor={(item) => item.id}
-              isLoading={false}
-              emptyMessage="No hay datos de productos vendidos"
-              className="overflow-hidden"
-            />
-          )}
-        </Card>
-      </div>
-
-      {/* Tabla de clientes frecuentes */}
-      <Card
-        title="Clientes Frecuentes"
-        className="mb-6"
-        actions={
-          <button className="text-xs text-purple-600 hover:text-purple-800 flex items-center">
-            Ver todos <ArrowRightIcon className="h-3 w-3 ml-1" />
-          </button>
-        }
-      >
-        <div className="flex items-center space-x-2 mb-4">
-          <UserGroupIcon className="h-5 w-5 text-purple-600" />
-          <span className="text-sm font-medium text-gray-700">Top clientes por frecuencia de compra</span>
-        </div>
-
-        {isLoading ? (
-          <div className="flex justify-center py-8">
-            <span className="h-8 w-8 animate-spin rounded-full border-4 border-purple-200 border-t-purple-600"></span>
-          </div>
-        ) : (
-          <Table
-            columns={clientColumns}
-            data={topClients}
-            keyExtractor={(item) => item.id}
-            isLoading={false}
-            emptyMessage="No hay datos de clientes frecuentes"
-            className="overflow-hidden"
-          />
-        )}
-      </Card>
-
       {/* Comisiones de vendedores del día */}
       <Card
         title="Comisiones del Día"
@@ -501,59 +356,65 @@ export default function Dashboard() {
         )}
       </Card>
 
-      {/* Estadísticas adicionales o KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <Card className="bg-gradient-to-br from-purple-50 to-white">
-          <div className="flex flex-col items-center justify-center py-4">
-            <div className="rounded-full bg-purple-100 p-3 mb-3">
-              <ChartBarIcon className="h-6 w-6 text-purple-600" />
+      {/* Gráfico de ventas por vendedor y tabla de productos más vendidos */}
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-6">
+        {/* Tabla de productos más vendidos */}
+        <Card
+          title="Productos Más Vendidos"
+          className="h-full"
+          actions={
+            <button className="text-xs text-purple-600 hover:text-purple-800 flex items-center">
+              Ver todos <ArrowRightIcon className="h-3 w-3 ml-1" />
+            </button>
+          }
+        >
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <span className="h-8 w-8 animate-spin rounded-full border-4 border-purple-200 border-t-purple-600"></span>
             </div>
-            <div className="text-center">
-              <h3 className="text-lg font-semibold">Desempeño de Vendedores</h3>
-              <p className="text-sm text-gray-500 mt-1">
-                Ver análisis detallado de rendimiento
-              </p>
-              <button className="mt-3 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-sm font-medium">
-                Ver reportes
-              </button>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-purple-50 to-white">
-          <div className="flex flex-col items-center justify-center py-4">
-            <div className="rounded-full bg-purple-100 p-3 mb-3">
-              <ShoppingBagIcon className="h-6 w-6 text-purple-600" />
-            </div>
-            <div className="text-center">
-              <h3 className="text-lg font-semibold">Inventario de Productos</h3>
-              <p className="text-sm text-gray-500 mt-1">
-                Gestiona tu catálogo de productos
-              </p>
-              <button className="mt-3 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-sm font-medium">
-                Gestionar
-              </button>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-purple-50 to-white">
-          <div className="flex flex-col items-center justify-center py-4">
-            <div className="rounded-full bg-purple-100 p-3 mb-3">
-              <UserGroupIcon className="h-6 w-6 text-purple-600" />
-            </div>
-            <div className="text-center">
-              <h3 className="text-lg font-semibold">Gestión de Vendedores</h3>
-              <p className="text-sm text-gray-500 mt-1">
-                Administra tu equipo de ventas
-              </p>
-              <button className="mt-3 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-sm font-medium">
-                Gestionar
-              </button>
-            </div>
-          </div>
+          ) : (
+            <Table
+              columns={productColumns}
+              data={topProducts}
+              keyExtractor={(item) => item.id}
+              isLoading={false}
+              emptyMessage="No hay datos de productos vendidos"
+              className="overflow-hidden"
+            />
+          )}
         </Card>
       </div>
+
+      {/* Tabla de clientes frecuentes */}
+      <Card
+        title="Clientes Frecuentes"
+        className="mb-6"
+        actions={
+          <button className="text-xs text-purple-600 hover:text-purple-800 flex items-center">
+            Ver todos <ArrowRightIcon className="h-3 w-3 ml-1" />
+          </button>
+        }
+      >
+        <div className="flex items-center space-x-2 mb-4">
+          <UserGroupIcon className="h-5 w-5 text-purple-600" />
+          <span className="text-sm font-medium text-gray-700">Top clientes por frecuencia de compra</span>
+        </div>
+
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <span className="h-8 w-8 animate-spin rounded-full border-4 border-purple-200 border-t-purple-600"></span>
+          </div>
+        ) : (
+          <Table
+            columns={clientColumns}
+            data={topClients}
+            keyExtractor={(item) => item.id}
+            isLoading={false}
+            emptyMessage="No hay datos de clientes frecuentes"
+            className="overflow-hidden"
+          />
+        )}
+      </Card>
     </div>
   );
 }

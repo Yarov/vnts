@@ -7,6 +7,7 @@ import { supabase } from './lib/supabase';
 // Layout Components
 import AdminLayout from './components/layouts/AdminLayout';
 import SellerLayout from './components/layouts/SellerLayout';
+import SimplifiedSellerLayout from './components/layouts/SimplifiedSellerLayout';
 
 // Auth Pages
 import LoginPage from './pages/auth/LoginPage';
@@ -116,7 +117,7 @@ function App() {
       </Route>
       
       {/* Seller Routes */}
-      <Route path="/seller" element={isSeller ? <SellerLayout /> : <Navigate to={isAdmin ? "/admin" : "/seller-login"} />}>
+      <Route path="/seller" element={isSeller ? <SimplifiedSellerLayout /> : <Navigate to={isAdmin ? "/admin" : "/seller-login"} />}>
         <Route index element={<SellerDashboard />} />
         <Route path="new-sale" element={<NewSalePage />} />
         <Route path="sales-history" element={<SalesHistoryPage />} />
