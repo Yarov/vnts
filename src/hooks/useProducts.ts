@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAtom } from 'jotai';
-import { 
-  productsAtom, 
-  loadingProductsAtom, 
-  searchProductsAtom, 
-  productCategoryFilterAtom, 
-  filteredProductsAtom 
+import {
+  productsAtom,
+  loadingProductsAtom,
+  searchProductsAtom,
+  productCategoryFilterAtom,
+  filteredProductsAtom
 } from '../store/products';
 import { getAllProducts, getProductCategories } from '../services/productService';
 
@@ -33,11 +33,11 @@ export function useProducts() {
   }, []);
 
   // Función para cargar productos
-  const loadProducts = async (activeOnly: boolean = true) => {
+  const loadProducts = async () => {
     setLoading(true);
 
     try {
-      const data = await getAllProducts(activeOnly);
+      const data = await getAllProducts(false);
       setProducts(data);
     } catch (error) {
       console.error('Error al cargar productos:', error);

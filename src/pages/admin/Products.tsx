@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { 
-  PlusIcon, 
+import {
+  PlusIcon,
   MagnifyingGlassIcon,
   PencilIcon,
   TrashIcon,
@@ -67,7 +67,7 @@ export default function Products() {
   // Manejar cambios en el formulario
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    
+
     if (currentProduct) {
       if (type === 'checkbox') {
         const checked = (e.target as HTMLInputElement).checked;
@@ -92,15 +92,15 @@ export default function Products() {
   // Validar formulario
   const validateForm = () => {
     const errors: {[key: string]: string} = {};
-    
+
     if (!currentProduct?.name) {
       errors.name = 'El nombre es obligatorio';
     }
-    
+
     if (currentProduct?.price === undefined || currentProduct.price <= 0) {
       errors.price = 'El precio debe ser mayor que 0';
     }
-    
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -108,11 +108,11 @@ export default function Products() {
   // Guardar producto
   const handleSaveProduct = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    
+
     if (!validateForm() || !currentProduct) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
       if (currentProduct.id) {
         // Actualizar producto existente
@@ -133,7 +133,7 @@ export default function Products() {
           active: currentProduct.active
         });
       }
-      
+
       // Actualizar lista de productos
       await refreshProducts();
       closeModal();
@@ -166,9 +166,9 @@ export default function Products() {
   // Manejar eliminación del producto
   const handleDeleteProduct = async () => {
     if (!productToDelete) return;
-    
+
     setIsDeletingProduct(true);
-    
+
     try {
       await deleteProduct(productToDelete);
       // Actualizar la lista de productos
@@ -185,21 +185,21 @@ export default function Products() {
 
   // Columnas para la tabla de productos
   const columns = [
-    { 
-      header: 'Nombre', 
-      accessor: 'name' 
+    {
+      header: 'Nombre',
+      accessor: 'name'
     },
-    { 
-      header: 'Precio', 
+    {
+      header: 'Precio',
       accessor: (product: Product) => `${product.price.toFixed(2)}`,
-      className: 'text-right' 
+      className: 'text-right'
     },
-    { 
-      header: 'Categoría', 
-      accessor: 'category' 
+    {
+      header: 'Categoría',
+      accessor: 'category'
     },
-    { 
-      header: 'Estado', 
+    {
+      header: 'Estado',
       accessor: (product: Product) => (
         <span className={`badge ${product.active ? 'badge-success' : 'badge-error'} gap-1`}>
           {product.active ? (
@@ -210,8 +210,8 @@ export default function Products() {
         </span>
       )
     },
-    { 
-      header: 'Acciones', 
+    {
+      header: 'Acciones',
       accessor: (product: Product) => (
         <div className="flex space-x-2 justify-end">
           <Button
@@ -316,7 +316,7 @@ export default function Products() {
             error={formErrors.name}
             required
           />
-          
+
           <FormField
             label="Precio"
             name="price"
@@ -327,14 +327,14 @@ export default function Products() {
             error={formErrors.price}
             required
           />
-          
+
           <FormField
             label="Categoría"
             name="category"
             value={currentProduct?.category || ''}
             onChange={handleInputChange}
           />
-          
+
           <TextAreaField
             label="Descripción"
             name="description"
@@ -343,7 +343,7 @@ export default function Products() {
             value={currentProduct?.description || ''}
             onChange={handleInputChange}
           />
-          
+
           <CheckboxField
             label="Producto activo"
             name="active"

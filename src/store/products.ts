@@ -13,13 +13,13 @@ export const filteredProductsAtom = atom((get) => {
   const products = get(productsAtom);
   const search = get(searchProductsAtom).toLowerCase();
   const categoryFilter = get(productCategoryFilterAtom);
-  
+
   return products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(search) || 
+    const matchesSearch = product.name.toLowerCase().includes(search) ||
                           (product.description?.toLowerCase().includes(search) || false);
-    
+
     const matchesCategory = !categoryFilter || product.category === categoryFilter;
-    
-    return matchesSearch && matchesCategory && product.active;
+
+    return matchesSearch && matchesCategory;
   });
 });

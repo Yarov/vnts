@@ -13,15 +13,14 @@ export const getAllProducts = async (activeOnly: boolean = true): Promise<Produc
       .from('products')
       .select('*')
       .order('name');
-      
     if (activeOnly) {
       query = query.eq('active', true);
     }
-    
+
     const { data, error } = await query;
-    
+
     if (error) throw error;
-    
+
     return data || [];
   } catch (error) {
     console.error('Error al obtener productos:', error);
@@ -41,9 +40,9 @@ export const getProductById = async (id: string): Promise<Product | null> => {
       .select('*')
       .eq('id', id)
       .single();
-    
+
     if (error) throw error;
-    
+
     return data;
   } catch (error) {
     console.error(`Error al obtener producto con ID ${id}:`, error);
@@ -65,9 +64,9 @@ export const createProduct = async (
       .insert([product])
       .select()
       .single();
-    
+
     if (error) throw error;
-    
+
     return data;
   } catch (error) {
     console.error('Error al crear producto:', error);
@@ -92,9 +91,9 @@ export const updateProduct = async (
       .eq('id', id)
       .select()
       .single();
-    
+
     if (error) throw error;
-    
+
     return data;
   } catch (error) {
     console.error(`Error al actualizar producto con ID ${id}:`, error);
@@ -113,9 +112,9 @@ export const deleteProduct = async (id: string): Promise<boolean> => {
       .from('products')
       .delete()
       .eq('id', id);
-    
+
     if (error) throw error;
-    
+
     return true;
   } catch (error) {
     console.error(`Error al eliminar producto con ID ${id}:`, error);
@@ -134,9 +133,9 @@ export const deactivateProduct = async (id: string): Promise<boolean> => {
       .from('products')
       .update({ active: false })
       .eq('id', id);
-    
+
     if (error) throw error;
-    
+
     return true;
   } catch (error) {
     console.error(`Error al desactivar producto con ID ${id}:`, error);
@@ -155,9 +154,9 @@ export const getProductCategories = async (): Promise<string[]> => {
       .select('category')
       .eq('active', true)
       .not('category', 'is', null);
-    
+
     if (error) throw error;
-    
+
     // Extraer categorías únicas
     const categories = [...new Set(data.map(p => p.category || ''))];
     return categories.filter(c => c !== ''); // Filtrar categorías vacías
@@ -176,9 +175,9 @@ export const getTopProducts = async (limit: number = 5): Promise<any[]> => {
   try {
     const { data, error } = await supabase
       .rpc('get_top_products', { limit_count: limit });
-    
+
     if (error) throw error;
-    
+
     return data || [];
   } catch (error) {
     console.error('Error al obtener productos top:', error);
