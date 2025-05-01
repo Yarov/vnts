@@ -1,3 +1,4 @@
+import { useAdminClients } from '../../hooks/useAdminClients';
 import { useState, useEffect } from 'react';
 import {
   PlusIcon,
@@ -17,185 +18,38 @@ import { Database } from '../../types/database.types';
 type Client = Database['public']['Tables']['clients']['Row'];
 
 export default function Clients() {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentClient, setCurrentClient] = useState<Partial<Client> | null>(null);
-  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [clientStats, setClientStats] = useState<any[]>([]);
+  const {
+    clients,
+    filteredClients,
+    loading,
+    searchTerm,
+    setSearchTerm,
+    isModalOpen,
+    openClientModal,
+    closeModal,
+    currentClient,
+    setCurrentClient,
+    formErrors,
+    setFormErrors,
+    isSubmitting,
+    handleInputChange,
+    handleSaveClient,
+    handleDeleteClient,
+    getClientStats
+  } = useAdminClients();
 
-  // Cargar clientes al montar el componente
-  useEffect(() => {
-    fetchClients();
-    fetchClientStats();
-  }, []);
-
-  // Función para obtener clientes de Supabase
-  const fetchClients = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('clients')
-        .select('*')
-        .order('name');
-
-      if (error) throw error;
-      setClients(data || []);
-    } catch (error) {
-      console.error('Error al cargar clientes:', error);
-      alert('Error al cargar clientes. Por favor, intenta de nuevo.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Función para obtener estadísticas de clientes
-  const fetchClientStats = async () => {
-    try {
-      const { data, error } = await supabase
-        .rpc('get_top_clients', { limit_count: 100 });
-
-      if (error) throw error;
-      setClientStats(data || []);
-    } catch (error) {
-      console.error('Error al cargar estadísticas de clientes:', error);
-    }
-  };
-
-  // Filtrar clientes según término de búsqueda
-  const filteredClients = clients.filter(client =>
-    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (client.reference && client.reference.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  // Abrir modal para crear/editar cliente
-  const openClientModal = (client?: Client) => {
-    setFormErrors({});
-    if (client) {
-      setCurrentClient({...client});
-    } else {
-      setCurrentClient({
-        name: '',
-        reference: ''
-      });
-    }
-    setIsModalOpen(true);
-  };
-
-  // Cerrar modal
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setCurrentClient(null);
-  };
-
-  // Manejar cambios en el formulario
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-
-    if (currentClient) {
-      setCurrentClient({
-        ...currentClient,
-        [name]: value
-      });
-    }
-  };
-
-  // Validar formulario
-  const validateForm = () => {
-    const errors: {[key: string]: string} = {};
-
-    if (!currentClient?.name) {
-      errors.name = 'El nombre es obligatorio';
-    }
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  // Guardar cliente
-  const handleSaveClient = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm() || !currentClient) return;
-
-    setIsSubmitting(true);
-
-    try {
-      if (currentClient.id) {
-        // Actualizar cliente existente
-        const { error } = await supabase
-          .from('clients')
-          .update({
-            name: currentClient.name,
-            reference: currentClient.reference || null
-          })
-          .eq('id', currentClient.id);
-
-        if (error) throw error;
-      } else {
-        // Crear nuevo cliente
-        const { error } = await supabase
-          .from('clients')
-          .insert([{
-            name: currentClient.name,
-            reference: currentClient.reference || null
-          }]);
-
-        if (error) throw error;
-      }
-
-      // Actualizar lista de clientes
-      await fetchClients();
-      closeModal();
-    } catch (error) {
-      console.error('Error al guardar cliente:', error);
-      alert('Error al guardar cliente. Por favor, intenta de nuevo.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Eliminar un cliente
-  const deleteClient = async (id: string) => {
-    if (!confirm('¿Estás seguro de que deseas eliminar este cliente?')) return;
-
-    try {
-      const { error } = await supabase
-        .from('clients')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      // Actualizar la lista localmente
-      setClients(clients.filter(client => client.id !== id));
-    } catch (error) {
-      console.error('Error al eliminar cliente:', error);
-      alert('Error al eliminar cliente. Puede que tenga ventas asociadas.');
-    }
-  };
-
-  // Obtener estadísticas de un cliente
-  const getClientStats = (clientId: string) => {
-    const stats = clientStats.find(cs => cs.id === clientId);
-    return stats || { purchase_count: 0, last_purchase: null };
-  };
-
-  // Columnas para la tabla de clientes
   const columns = [
     {
       header: 'Nombre',
-      accessor: 'name'
+      accessor: (client: any) => client.name
     },
     {
       header: 'Referencia',
-      accessor: (client: Client) => client.reference || '-'
+      accessor: (client: any) => client.reference || '-'
     },
     {
       header: 'Compras',
-      accessor: (client: Client) => {
+      accessor: (client: any) => {
         const stats = getClientStats(client.id);
         return stats.purchase_count || 0;
       },
@@ -203,7 +57,7 @@ export default function Clients() {
     },
     {
       header: 'Última compra',
-      accessor: (client: Client) => {
+      accessor: (client: any) => {
         const stats = getClientStats(client.id);
         return stats.last_purchase
           ? new Date(stats.last_purchase).toLocaleDateString()
@@ -212,7 +66,7 @@ export default function Clients() {
     },
     {
       header: 'Acciones',
-      accessor: (client: Client) => (
+      accessor: (client: any) => (
         <div className="flex space-x-2 justify-end">
           <Button
             variant="outline"
@@ -225,7 +79,7 @@ export default function Clients() {
           <Button
             variant="danger"
             size="sm"
-            onClick={() => deleteClient(client.id)}
+            onClick={() => handleDeleteClient(client.id)}
             icon={<TrashIcon className="h-4 w-4" />}
           >
             Eliminar
@@ -317,7 +171,7 @@ export default function Clients() {
                     <Button
                       type="submit"
                       variant="primary"
-                      isLoading={isSubmitting}
+                      loading={isSubmitting}
                       className="sm:col-start-2"
                     >
                       {currentClient?.id ? 'Guardar cambios' : 'Crear cliente'}

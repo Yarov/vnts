@@ -1,6 +1,7 @@
+import { useAdminSellers } from '../../hooks/useAdminSellers';
 import { useState, useEffect } from 'react';
-import { 
-  PlusIcon, 
+import {
+  PlusIcon,
   MagnifyingGlassIcon,
   PencilIcon,
   TrashIcon,
@@ -9,7 +10,6 @@ import {
   IdentificationIcon,
   CurrencyDollarIcon
 } from '@heroicons/react/24/outline';
-import { supabase } from '../../lib/supabase';
 import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
 import Button from '../../components/ui/Button';
@@ -22,255 +22,59 @@ import { Database } from '../../types/database.types';
 type Seller = Database['public']['Tables']['sellers']['Row'];
 
 export default function Sellers() {
-  const [sellers, setSellers] = useState<Seller[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentSeller, setCurrentSeller] = useState<Partial<Seller> | null>(null);
-  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [sellerToDelete, setSellerToDelete] = useState<string | null>(null);
-  const [isDeletingSeller, setIsDeletingSeller] = useState(false);
+  const {
+    filteredSellers,
+    loading,
+    searchTerm,
+    setSearchTerm,
+    isModalOpen,
+    openSellerModal,
+    closeModal,
+    currentSeller,
+    setCurrentSeller,
+    formErrors,
+    setFormErrors,
+    isSubmitting,
+    handleInputChange,
+    handleSaveSeller,
+    toggleSellerStatus,
+    isDeleteConfirmOpen,
+    confirmDeleteSeller,
+    handleDeleteSeller,
+    isDeletingSeller
+  } = useAdminSellers();
 
-  // Cargar vendedores al montar el componente
-  useEffect(() => {
-    fetchSellers();
-  }, []);
-
-  // Función para obtener vendedores de Supabase
-  const fetchSellers = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('sellers')
-        .select('*')
-        .order('name');
-      
-      if (error) throw error;
-      setSellers(data || []);
-    } catch (error) {
-      console.error('Error al cargar vendedores:', error);
-      alert('Error al cargar vendedores. Por favor, intenta de nuevo.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Filtrar vendedores según término de búsqueda
-  const filteredSellers = sellers.filter(seller => 
-    seller.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    seller.numeric_code.includes(searchTerm)
-  );
-
-  // Abrir modal para crear/editar vendedor
-  const openSellerModal = (seller?: Seller) => {
-    setFormErrors({});
-    if (seller) {
-      setCurrentSeller({...seller});
-    } else {
-      setCurrentSeller({
-        name: '',
-        numeric_code: '',
-        active: true,
-        commission_percentage: 0
-      });
-    }
-    setIsModalOpen(true);
-  };
-
-  // Cerrar modal
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setCurrentSeller(null);
-  };
-
-  // Manejar cambios en el formulario
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    
-    if (currentSeller) {
-      if (type === 'checkbox') {
-        setCurrentSeller({
-          ...currentSeller,
-          [name]: checked
-        });
-      } else if (type === 'number') {
-        setCurrentSeller({
-          ...currentSeller,
-          [name]: parseFloat(value)
-        });
-      } else {
-        setCurrentSeller({
-          ...currentSeller,
-          [name]: value
-        });
-      }
-    }
-  };
-
-  // Validar formulario
-  const validateForm = () => {
-    const errors: {[key: string]: string} = {};
-    
-    if (!currentSeller?.name) {
-      errors.name = 'El nombre es obligatorio';
-    }
-    
-    if (!currentSeller?.numeric_code) {
-      errors.numeric_code = 'El código numérico es obligatorio';
-    } else if (!/^\d+$/.test(currentSeller.numeric_code)) {
-      errors.numeric_code = 'El código debe contener solo números';
-    } else {
-      // Verificar si el código ya existe (solo para nuevos vendedores)
-      const existingCode = sellers.find(
-        s => s.numeric_code === currentSeller.numeric_code && s.id !== currentSeller.id
-      );
-      if (existingCode) {
-        errors.numeric_code = 'Este código ya está en uso';
-      }
-    }
-    
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  // Guardar vendedor
-  const handleSaveSeller = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    
-    if (!validateForm() || !currentSeller) return;
-    
-    setIsSubmitting(true);
-    
-    try {
-      if (currentSeller.id) {
-        // Actualizar vendedor existente
-        const { error } = await supabase
-          .from('sellers')
-          .update({
-            name: currentSeller.name,
-            numeric_code: currentSeller.numeric_code,
-            active: currentSeller.active,
-            commission_percentage: currentSeller.commission_percentage || 0
-          })
-          .eq('id', currentSeller.id);
-        
-        if (error) throw error;
-      } else {
-        // Crear nuevo vendedor
-        const { error } = await supabase
-          .from('sellers')
-          .insert([{
-            name: currentSeller.name,
-            numeric_code: currentSeller.numeric_code,
-            active: currentSeller.active,
-            commission_percentage: currentSeller.commission_percentage || 0
-          }]);
-        
-        if (error) throw error;
-      }
-      
-      // Actualizar lista de vendedores
-      await fetchSellers();
-      closeModal();
-    } catch (error) {
-      console.error('Error al guardar vendedor:', error);
-      alert('Error al guardar vendedor. Por favor, intenta de nuevo.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Cambiar estado de un vendedor (activar/desactivar)
-  const toggleSellerStatus = async (id: string, currentStatus: boolean) => {
-    try {
-      const { error } = await supabase
-        .from('sellers')
-        .update({ active: !currentStatus })
-        .eq('id', id);
-      
-      if (error) throw error;
-      
-      // Actualizar la lista localmente
-      setSellers(sellers.map(seller => {
-        if (seller.id === id) {
-          return { ...seller, active: !currentStatus };
-        }
-        return seller;
-      }));
-    } catch (error) {
-      console.error('Error al cambiar estado del vendedor:', error);
-      alert('Error al cambiar estado del vendedor. Por favor, intenta de nuevo.');
-    }
-  };
-
-  // Eliminar un vendedor
-  const confirmDeleteSeller = (id: string) => {
-    setSellerToDelete(id);
-    setIsDeleteConfirmOpen(true);
-  };
-  
-  const handleDeleteSeller = async () => {
-    if (!sellerToDelete) return;
-    
-    setIsDeletingSeller(true);
-    
-    try {
-      const { error } = await supabase
-        .from('sellers')
-        .delete()
-        .eq('id', sellerToDelete);
-      
-      if (error) throw error;
-      
-      // Actualizar la lista localmente
-      setSellers(sellers.filter(seller => seller.id !== sellerToDelete));
-      setIsDeleteConfirmOpen(false);
-    } catch (error) {
-      console.error('Error al eliminar vendedor:', error);
-      alert('Error al eliminar vendedor. Puede que tenga ventas asociadas.');
-    } finally {
-      setIsDeletingSeller(false);
-    }
-  };
-
-  // Columnas para la tabla de vendedores
   const columns = [
-    { 
-      header: 'Nombre', 
-      accessor: 'name' 
+    {
+      header: 'Nombre',
+      accessor: (seller: Seller) => seller.name
     },
-    { 
-      header: 'Código', 
+    {
+      header: 'Código',
       accessor: (seller: Seller) => (
         <span className="badge badge-outline font-mono">
           {seller.numeric_code}
         </span>
       )
     },
-    { 
-      header: 'Comisión', 
+    {
+      header: 'Estado',
       accessor: (seller: Seller) => (
-        <span className="badge badge-outline gap-1">
-          <CurrencyDollarIcon className="h-4 w-4" /> {seller.commission_percentage}%
-        </span>
-      )
-    },
-    { 
-      header: 'Estado', 
-      accessor: (seller: Seller) => (
-        <span className={`badge ${seller.active ? 'badge-success' : 'badge-error'} gap-1`}>
+        <span className={`flex items-center ${seller.active ? 'text-green-600' : 'text-red-600'}`}>
           {seller.active ? (
-            <><CheckCircleIcon className="h-4 w-4" /> Activo</>
+            <><CheckCircleIcon className="h-5 w-5 mr-1" /> Activo</>
           ) : (
-            <><XCircleIcon className="h-4 w-4" /> Inactivo</>
+            <><XCircleIcon className="h-5 w-5 mr-1" /> Inactivo</>
           )}
         </span>
       )
     },
-    { 
-      header: 'Acciones', 
+    {
+      header: 'Comisión (%)',
+      accessor: (seller: Seller) => seller.commission_percentage
+    },
+    {
+      header: 'Acciones',
       accessor: (seller: Seller) => (
         <div className="flex space-x-2 justify-end">
           <Button
@@ -290,7 +94,7 @@ export default function Sellers() {
             Editar
           </Button>
           <Button
-            variant="error"
+            variant="danger"
             size="sm"
             onClick={() => confirmDeleteSeller(seller.id)}
             icon={<TrashIcon className="h-4 w-4" />}
@@ -330,7 +134,6 @@ export default function Sellers() {
             leftIcon={<MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />}
           />
         </div>
-
         <Table
           columns={columns}
           data={filteredSellers}
@@ -359,7 +162,7 @@ export default function Sellers() {
               type="button"
               variant="primary"
               onClick={handleSaveSeller}
-              isLoading={isSubmitting}
+              loading={isSubmitting}
             >
               {currentSeller?.id ? 'Guardar cambios' : 'Crear vendedor'}
             </Button>
@@ -375,7 +178,6 @@ export default function Sellers() {
             error={formErrors.name}
             required
           />
-          
           <FormField
             label="Código numérico"
             name="numeric_code"
@@ -383,40 +185,37 @@ export default function Sellers() {
             onChange={handleInputChange}
             error={formErrors.numeric_code}
             required
-            maxLength={6}
-            leftIcon={<IdentificationIcon className="h-5 w-5 text-gray-400" />}
-            helper="Código de 4-6 dígitos para acceso del vendedor"
           />
-          
           <FormField
-            label="Porcentaje de comisión"
+            label="Comisión (%)"
             name="commission_percentage"
             type="number"
-            step="0.01"
-            min="0"
-            max="100"
-            value={currentSeller?.commission_percentage?.toString() || '0'}
+            value={currentSeller?.commission_percentage || 0}
             onChange={handleInputChange}
-            leftIcon={<CurrencyDollarIcon className="h-5 w-5 text-gray-400" />}
-            helper="Porcentaje de comisión por ventas (0-100%)"
           />
-          
           <CheckboxField
             label="Vendedor activo"
             name="active"
             checked={currentSeller?.active || false}
-            onChange={handleInputChange}
+            onChange={(e) => {
+              if (currentSeller) {
+                setCurrentSeller({
+                  ...currentSeller,
+                  active: e.target.checked
+                });
+              }
+            }}
           />
         </form>
       </Modal>
-      
+
       {/* Diálogo de confirmación para eliminar vendedor */}
       <ConfirmDialog
         isOpen={isDeleteConfirmOpen}
-        onClose={() => setIsDeleteConfirmOpen(false)}
+        onClose={closeModal}
         onConfirm={handleDeleteSeller}
         title="Eliminar Vendedor"
-        message="¿Estás seguro de que deseas eliminar este vendedor? Esta acción no se puede deshacer y podría afectar a las ventas asociadas."
+        message="¿Estás seguro de que deseas eliminar este vendedor? Esta acción no se puede deshacer."
         confirmText="Eliminar"
         cancelText="Cancelar"
         type="danger"

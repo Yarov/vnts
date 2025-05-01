@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useAdminProducts } from '../../hooks/useAdminProducts';
 import {
   PlusIcon,
   MagnifyingGlassIcon,
@@ -7,8 +7,6 @@ import {
   CheckCircleIcon,
   XCircleIcon
 } from '@heroicons/react/24/outline';
-import { useProducts } from '../../hooks';
-import { createProduct, updateProduct, deleteProduct } from '../../services/productService';
 import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
 import Button from '../../components/ui/Button';
@@ -22,172 +20,34 @@ import { Database } from '../../types/database.types';
 type Product = Database['public']['Tables']['products']['Row'];
 
 export default function Products() {
-  // Usar nuestro hook personalizado para productos
+  // Usar el hook de admin para productos
   const {
-    products: filteredProducts,
+    filteredProducts,
     loading,
     searchQuery,
     searchProducts,
-    refreshProducts
-  } = useProducts();
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentProduct, setCurrentProduct] = useState<Partial<Product> | null>(null);
-  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [productToDelete, setProductToDelete] = useState<string | null>(null);
-  const [isDeletingProduct, setIsDeletingProduct] = useState(false);
-
-
-
-  // Abrir modal para crear/editar producto
-  const openProductModal = (product?: Product) => {
-    setFormErrors({});
-    if (product) {
-      setCurrentProduct({...product});
-    } else {
-      setCurrentProduct({
-        name: '',
-        price: 0,
-        category: '',
-        description: '',
-        active: true
-      });
-    }
-    setIsModalOpen(true);
-  };
-
-  // Cerrar modal
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setCurrentProduct(null);
-  };
-
-  // Manejar cambios en el formulario
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-
-    if (currentProduct) {
-      if (type === 'checkbox') {
-        const checked = (e.target as HTMLInputElement).checked;
-        setCurrentProduct({
-          ...currentProduct,
-          [name]: checked
-        });
-      } else if (type === 'number') {
-        setCurrentProduct({
-          ...currentProduct,
-          [name]: parseFloat(value)
-        });
-      } else {
-        setCurrentProduct({
-          ...currentProduct,
-          [name]: value
-        });
-      }
-    }
-  };
-
-  // Validar formulario
-  const validateForm = () => {
-    const errors: {[key: string]: string} = {};
-
-    if (!currentProduct?.name) {
-      errors.name = 'El nombre es obligatorio';
-    }
-
-    if (currentProduct?.price === undefined || currentProduct.price <= 0) {
-      errors.price = 'El precio debe ser mayor que 0';
-    }
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  // Guardar producto
-  const handleSaveProduct = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-
-    if (!validateForm() || !currentProduct) return;
-
-    setIsSubmitting(true);
-
-    try {
-      if (currentProduct.id) {
-        // Actualizar producto existente
-        await updateProduct(currentProduct.id, {
-          name: currentProduct.name || '',
-          price: currentProduct.price || 0,
-          category: currentProduct.category,
-          description: currentProduct.description,
-          active: currentProduct.active
-        });
-      } else {
-        // Crear nuevo producto
-        await createProduct({
-          name: currentProduct.name || '',
-          price: currentProduct.price || 0,
-          category: currentProduct.category,
-          description: currentProduct.description,
-          active: currentProduct.active
-        });
-      }
-
-      // Actualizar lista de productos
-      await refreshProducts();
-      closeModal();
-    } catch (error) {
-      console.error('Error al guardar producto:', error);
-      alert('Error al guardar producto. Por favor, intenta de nuevo.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Cambiar estado de un producto (activar/desactivar)
-  const toggleProductStatus = async (id: string, currentStatus: boolean) => {
-    try {
-      await updateProduct(id, { active: !currentStatus });
-      // Actualizar la lista de productos
-      refreshProducts();
-    } catch (error) {
-      console.error('Error al cambiar estado del producto:', error);
-      alert('Error al cambiar estado del producto. Por favor, intenta de nuevo.');
-    }
-  };
-
-  // Eliminar un producto
-  const confirmDeleteProduct = (id: string) => {
-    setProductToDelete(id);
-    setIsDeleteConfirmOpen(true);
-  };
-
-  // Manejar eliminación del producto
-  const handleDeleteProduct = async () => {
-    if (!productToDelete) return;
-
-    setIsDeletingProduct(true);
-
-    try {
-      await deleteProduct(productToDelete);
-      // Actualizar la lista de productos
-      refreshProducts();
-      setIsDeleteConfirmOpen(false);
-      setProductToDelete(null);
-    } catch (error) {
-      console.error('Error al eliminar producto:', error);
-      alert('Error al eliminar producto. Por favor, intenta de nuevo.');
-    } finally {
-      setIsDeletingProduct(false);
-    }
-  };
+    isModalOpen,
+    openProductModal,
+    closeModal,
+    currentProduct,
+    setCurrentProduct,
+    formErrors,
+    setFormErrors,
+    isSubmitting,
+    handleInputChange,
+    handleSaveProduct,
+    toggleProductStatus,
+    isDeleteConfirmOpen,
+    confirmDeleteProduct,
+    handleDeleteProduct,
+    isDeletingProduct
+  } = useAdminProducts();
 
   // Columnas para la tabla de productos
   const columns = [
     {
       header: 'Nombre',
-      accessor: 'name'
+      accessor: (product: Product) => product.name
     },
     {
       header: 'Precio',
@@ -196,16 +56,16 @@ export default function Products() {
     },
     {
       header: 'Categoría',
-      accessor: 'category'
+      accessor: (product: Product) => product.category ?? ''
     },
     {
       header: 'Estado',
       accessor: (product: Product) => (
-        <span className={`badge ${product.active ? 'badge-success' : 'badge-error'} gap-1`}>
+        <span className={`flex items-center ${product.active ? 'text-green-600' : 'text-red-600'}`}>
           {product.active ? (
-            <><CheckCircleIcon className="h-4 w-4" /> Activo</>
+            <><CheckCircleIcon className="h-5 w-5 mr-1" /> Activo</>
           ) : (
-            <><XCircleIcon className="h-4 w-4" /> Inactivo</>
+            <><XCircleIcon className="h-5 w-5 mr-1" /> Inactivo</>
           )}
         </span>
       )
@@ -231,7 +91,7 @@ export default function Products() {
             Editar
           </Button>
           <Button
-            variant="error"
+            variant="danger"
             size="sm"
             onClick={() => confirmDeleteProduct(product.id)}
             icon={<TrashIcon className="h-4 w-4" />}
@@ -300,7 +160,7 @@ export default function Products() {
               type="button"
               variant="primary"
               onClick={handleSaveProduct}
-              isLoading={isSubmitting}
+              loading={isSubmitting}
             >
               {currentProduct?.id ? 'Guardar cambios' : 'Crear producto'}
             </Button>
@@ -363,7 +223,7 @@ export default function Products() {
       {/* Diálogo de confirmación para eliminar producto */}
       <ConfirmDialog
         isOpen={isDeleteConfirmOpen}
-        onClose={() => setIsDeleteConfirmOpen(false)}
+        onClose={closeModal}
         onConfirm={handleDeleteProduct}
         title="Eliminar Producto"
         message="¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer."

@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import {
   CurrencyDollarIcon,
   ReceiptPercentIcon,
@@ -11,48 +10,19 @@ import StatsCard from '../../components/dashboard/StatsCard';
 import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
 import Badge from '../../components/ui/Badge';
-import { formatCurrency, formatDate, formatDayMonthLong } from '../../utils/formatters';
-import { getDashboardData } from '../../services/dashboardService';
+import { useAdminDashboard } from '../../hooks/useAdminDashboard';
 
 export default function Dashboard() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [salesSummary, setSalesSummary] = useState({
-    totalSales: 0,
-    dailySales: 0,
-    weeklySales: 0,
-    productCount: 0,
-    dailyChange: { value: 0, isPositive: true },
-    weeklyChange: { value: 0, isPositive: true }
-  });
-  const [topProducts, setTopProducts] = useState<any[]>([]);
-  const [sellerCommissions, setSellerCommissions] = useState<any[]>([]);
-  const [topClients, setTopClients] = useState<any[]>([]);
-
-
-  // Obtener el día actual formateado
-  const currentDay = formatDayMonthLong(new Date());
-
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      setIsLoading(true);
-
-      try {
-        // Usar el servicio para obtener todos los datos del dashboard
-        const dashboardData = await getDashboardData();
-        
-        setSalesSummary(dashboardData.salesSummary);
-        setTopProducts(dashboardData.topProducts || []);
-        setSellerCommissions(dashboardData.sellerCommissions || []);
-        setTopClients(dashboardData.topClients || []);
-      } catch (error) {
-        console.error('Error al cargar datos del dashboard:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, []);
+  const {
+    isLoading,
+    salesSummary,
+    topProducts,
+    sellerCommissions,
+    topClients,
+    currentDay,
+    formatCurrency: useAdminFormatCurrency,
+    formatDate: useAdminFormatDate
+  } = useAdminDashboard();
 
   // Columnas para tabla de productos
   const productColumns = [
@@ -64,7 +34,7 @@ export default function Dashboard() {
     },
     {
       header: 'Total',
-      accessor: (item: any) => formatCurrency(item.total),
+      accessor: (item: any) => useAdminFormatCurrency(item.total),
       className: 'text-right font-medium'
     }
   ];
@@ -83,7 +53,7 @@ export default function Dashboard() {
     },
     {
       header: 'Última compra',
-      accessor: (item: any) => formatDate(new Date(item.last_purchase), 'dd/MM/yyyy'),
+      accessor: (item: any) => useAdminFormatDate(new Date(item.last_purchase), 'dd/MM/yyyy'),
       className: 'text-center'
     }
   ];
@@ -105,14 +75,14 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-6">
         <StatsCard
           title="Ventas Totales"
-          value={formatCurrency(salesSummary.totalSales)}
+          value={useAdminFormatCurrency(salesSummary.totalSales)}
           icon={<CurrencyDollarIcon className="h-6 w-6" />}
           footer="Desde el inicio"
           className="bg-gradient-to-br from-purple-50 to-white"
         />
         <StatsCard
           title="Ventas del Día"
-          value={formatCurrency(salesSummary.dailySales)}
+          value={useAdminFormatCurrency(salesSummary.dailySales)}
           icon={<ReceiptPercentIcon className="h-6 w-6" />}
           change={salesSummary.dailyChange}
           footer="vs. día anterior"
@@ -120,7 +90,7 @@ export default function Dashboard() {
         />
         <StatsCard
           title="Ventas Semanales"
-          value={formatCurrency(salesSummary.weeklySales)}
+          value={useAdminFormatCurrency(salesSummary.weeklySales)}
           icon={<CurrencyDollarIcon className="h-6 w-6" />}
           change={salesSummary.weeklyChange}
           footer="vs. semana anterior"
@@ -169,14 +139,14 @@ export default function Dashboard() {
                   sellerCommissions.map((commission, index) => (
                     <tr key={commission.seller_id}>
                       <td>{commission.seller_name}</td>
-                      <td className="text-right">{formatCurrency(commission.total_sales)}</td>
+                      <td className="text-right">{useAdminFormatCurrency(commission.total_sales)}</td>
                       <td className="text-center">
                         <Badge color="purple" className="mx-auto">
                           {commission.commission_percentage}%
                         </Badge>
                       </td>
                       <td className="text-right font-medium text-green-600">
-                        {formatCurrency(commission.commission_amount)}
+                        {useAdminFormatCurrency(commission.commission_amount)}
                       </td>
                     </tr>
                   ))
@@ -193,7 +163,7 @@ export default function Dashboard() {
                   <tr>
                     <th colSpan={3} className="text-right">Total Comisiones:</th>
                     <th className="text-right text-green-600">
-                      {formatCurrency(sellerCommissions.reduce((sum, item) => sum + item.commission_amount, 0))}
+                      {useAdminFormatCurrency(sellerCommissions.reduce((sum, item) => sum + item.commission_amount, 0))}
                     </th>
                   </tr>
                 </tfoot>
