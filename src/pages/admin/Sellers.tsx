@@ -14,6 +14,9 @@ import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
 import Button from '../../components/ui/Button';
 import FormField from '../../components/ui/FormField';
+import CheckboxField from '../../components/ui/CheckboxField';
+import Modal from '../../components/ui/Modal';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { Database } from '../../types/database.types';
 
 type Seller = Database['public']['Tables']['sellers']['Row'];
@@ -26,6 +29,9 @@ export default function Sellers() {
   const [currentSeller, setCurrentSeller] = useState<Partial<Seller> | null>(null);
   const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [sellerToDelete, setSellerToDelete] = useState<string | null>(null);
+  const [isDeletingSeller, setIsDeletingSeller] = useState(false);
 
   // Cargar vendedores al montar el componente
   useEffect(() => {
@@ -130,8 +136,8 @@ export default function Sellers() {
   };
 
   // Guardar vendedor
-  const handleSaveSeller = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSaveSeller = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     
     if (!validateForm() || !currentSeller) return;
     
@@ -200,22 +206,32 @@ export default function Sellers() {
   };
 
   // Eliminar un vendedor
-  const deleteSeller = async (id: string) => {
-    if (!confirm('¿Estás seguro de que deseas eliminar este vendedor?')) return;
+  const confirmDeleteSeller = (id: string) => {
+    setSellerToDelete(id);
+    setIsDeleteConfirmOpen(true);
+  };
+  
+  const handleDeleteSeller = async () => {
+    if (!sellerToDelete) return;
+    
+    setIsDeletingSeller(true);
     
     try {
       const { error } = await supabase
         .from('sellers')
         .delete()
-        .eq('id', id);
+        .eq('id', sellerToDelete);
       
       if (error) throw error;
       
       // Actualizar la lista localmente
-      setSellers(sellers.filter(seller => seller.id !== id));
+      setSellers(sellers.filter(seller => seller.id !== sellerToDelete));
+      setIsDeleteConfirmOpen(false);
     } catch (error) {
       console.error('Error al eliminar vendedor:', error);
       alert('Error al eliminar vendedor. Puede que tenga ventas asociadas.');
+    } finally {
+      setIsDeletingSeller(false);
     }
   };
 
@@ -276,7 +292,7 @@ export default function Sellers() {
           <Button
             variant="error"
             size="sm"
-            onClick={() => deleteSeller(seller.id)}
+            onClick={() => confirmDeleteSeller(seller.id)}
             icon={<TrashIcon className="h-4 w-4" />}
           >
             Eliminar
@@ -311,7 +327,7 @@ export default function Sellers() {
             placeholder="Buscar por nombre o código..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            leftIcon={<MagnifyingGlassIcon className="h-5 w-5 opacity-70" />}
+            leftIcon={<MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />}
           />
         </div>
 
@@ -325,84 +341,87 @@ export default function Sellers() {
       </Card>
 
       {/* Modal de creación/edición de vendedor */}
-      {isModalOpen && (
-        <dialog open className="modal modal-open">
-          <div className="modal-box">
-            <h3 className="font-bold text-lg mb-4">
-              {currentSeller?.id ? 'Editar Vendedor' : 'Crear Nuevo Vendedor'}
-            </h3>
-            
-            <form onSubmit={handleSaveSeller}>
-              <FormField
-                label="Nombre del vendedor"
-                name="name"
-                value={currentSeller?.name || ''}
-                onChange={handleInputChange}
-                error={formErrors.name}
-                required
-              />
-              
-              <FormField
-                label="Código numérico"
-                name="numeric_code"
-                value={currentSeller?.numeric_code || ''}
-                onChange={handleInputChange}
-                error={formErrors.numeric_code}
-                required
-                maxLength={6}
-                leftIcon={<IdentificationIcon className="h-5 w-5 opacity-70" />}
-                helper="Código de 4-6 dígitos para acceso del vendedor"
-              />
-              
-              <FormField
-                label="Porcentaje de comisión"
-                name="commission_percentage"
-                type="number"
-                step="0.01"
-                min="0"
-                max="100"
-                value={currentSeller?.commission_percentage?.toString() || '0'}
-                onChange={handleInputChange}
-                leftIcon={<CurrencyDollarIcon className="h-5 w-5 opacity-70" />}
-                helper="Porcentaje de comisión por ventas (0-100%)"
-              />
-              
-              <div className="form-control mb-4">
-                <label className="label cursor-pointer justify-start gap-2">
-                  <input
-                    type="checkbox"
-                    className="checkbox"
-                    name="active"
-                    checked={currentSeller?.active || false}
-                    onChange={handleInputChange}
-                  />
-                  <span className="label-text">Vendedor activo</span>
-                </label>
-              </div>
-              
-              <div className="modal-action">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={closeModal}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  isLoading={isSubmitting}
-                >
-                  {currentSeller?.id ? 'Guardar cambios' : 'Crear vendedor'}
-                </Button>
-              </div>
-            </form>
-          </div>
-          <form method="dialog" className="modal-backdrop">
-            <button onClick={closeModal}>cerrar</button>
-          </form>
-        </dialog>
-      )}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        title={currentSeller?.id ? 'Editar Vendedor' : 'Crear Nuevo Vendedor'}
+        size="lg"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={closeModal}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={handleSaveSeller}
+              isLoading={isSubmitting}
+            >
+              {currentSeller?.id ? 'Guardar cambios' : 'Crear vendedor'}
+            </Button>
+          </>
+        }
+      >
+        <form onSubmit={(e) => { e.preventDefault(); handleSaveSeller(e); }}>
+          <FormField
+            label="Nombre del vendedor"
+            name="name"
+            value={currentSeller?.name || ''}
+            onChange={handleInputChange}
+            error={formErrors.name}
+            required
+          />
+          
+          <FormField
+            label="Código numérico"
+            name="numeric_code"
+            value={currentSeller?.numeric_code || ''}
+            onChange={handleInputChange}
+            error={formErrors.numeric_code}
+            required
+            maxLength={6}
+            leftIcon={<IdentificationIcon className="h-5 w-5 text-gray-400" />}
+            helper="Código de 4-6 dígitos para acceso del vendedor"
+          />
+          
+          <FormField
+            label="Porcentaje de comisión"
+            name="commission_percentage"
+            type="number"
+            step="0.01"
+            min="0"
+            max="100"
+            value={currentSeller?.commission_percentage?.toString() || '0'}
+            onChange={handleInputChange}
+            leftIcon={<CurrencyDollarIcon className="h-5 w-5 text-gray-400" />}
+            helper="Porcentaje de comisión por ventas (0-100%)"
+          />
+          
+          <CheckboxField
+            label="Vendedor activo"
+            name="active"
+            checked={currentSeller?.active || false}
+            onChange={handleInputChange}
+          />
+        </form>
+      </Modal>
+      
+      {/* Diálogo de confirmación para eliminar vendedor */}
+      <ConfirmDialog
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={handleDeleteSeller}
+        title="Eliminar Vendedor"
+        message="¿Estás seguro de que deseas eliminar este vendedor? Esta acción no se puede deshacer y podría afectar a las ventas asociadas."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        type="danger"
+        isLoading={isDeletingSeller}
+      />
     </div>
   );
 }

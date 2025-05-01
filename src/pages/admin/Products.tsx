@@ -13,6 +13,10 @@ import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
 import Button from '../../components/ui/Button';
 import FormField from '../../components/ui/FormField';
+import TextAreaField from '../../components/ui/TextAreaField';
+import CheckboxField from '../../components/ui/CheckboxField';
+import Modal from '../../components/ui/Modal';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { Database } from '../../types/database.types';
 
 type Product = Database['public']['Tables']['products']['Row'];
@@ -31,6 +35,9 @@ export default function Products() {
   const [currentProduct, setCurrentProduct] = useState<Partial<Product> | null>(null);
   const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<string | null>(null);
+  const [isDeletingProduct, setIsDeletingProduct] = useState(false);
 
 
 
@@ -99,8 +106,8 @@ export default function Products() {
   };
 
   // Guardar producto
-  const handleSaveProduct = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSaveProduct = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     
     if (!validateForm() || !currentProduct) return;
     
@@ -151,16 +158,28 @@ export default function Products() {
   };
 
   // Eliminar un producto
-  const handleDeleteProduct = async (id: string) => {
-    if (!confirm('¿Estás seguro de que deseas eliminar este producto?')) return;
+  const confirmDeleteProduct = (id: string) => {
+    setProductToDelete(id);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  // Manejar eliminación del producto
+  const handleDeleteProduct = async () => {
+    if (!productToDelete) return;
+    
+    setIsDeletingProduct(true);
     
     try {
-      await deleteProduct(id);
+      await deleteProduct(productToDelete);
       // Actualizar la lista de productos
       refreshProducts();
+      setIsDeleteConfirmOpen(false);
+      setProductToDelete(null);
     } catch (error) {
       console.error('Error al eliminar producto:', error);
       alert('Error al eliminar producto. Por favor, intenta de nuevo.');
+    } finally {
+      setIsDeletingProduct(false);
     }
   };
 
@@ -214,7 +233,7 @@ export default function Products() {
           <Button
             variant="error"
             size="sm"
-            onClick={() => handleDeleteProduct(product.id)}
+            onClick={() => confirmDeleteProduct(product.id)}
             icon={<TrashIcon className="h-4 w-4" />}
           >
             Eliminar
@@ -249,7 +268,7 @@ export default function Products() {
             placeholder="Buscar por nombre, categoría o descripción..."
             value={searchQuery}
             onChange={(e) => searchProducts(e.target.value)}
-            leftIcon={<MagnifyingGlassIcon className="h-5 w-5 opacity-70" />}
+            leftIcon={<MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />}
           />
         </div>
 
@@ -263,98 +282,96 @@ export default function Products() {
       </Card>
 
       {/* Modal de creación/edición de producto */}
-      {isModalOpen && (
-        <dialog open className="modal modal-open">
-          <div className="modal-box">
-            <h3 className="font-bold text-lg mb-4">
-              {currentProduct?.id ? 'Editar Producto' : 'Crear Nuevo Producto'}
-            </h3>
-            
-            <form onSubmit={handleSaveProduct}>
-              <FormField
-                label="Nombre del producto"
-                name="name"
-                value={currentProduct?.name || ''}
-                onChange={handleInputChange}
-                error={formErrors.name}
-                required
-              />
-              
-              <FormField
-                label="Precio"
-                name="price"
-                type="number"
-                step="0.01"
-                value={currentProduct?.price || ''}
-                onChange={handleInputChange}
-                error={formErrors.price}
-                required
-              />
-              
-              <FormField
-                label="Categoría"
-                name="category"
-                value={currentProduct?.category || ''}
-                onChange={handleInputChange}
-              />
-              
-              <div className="form-control mb-4">
-                <label className="label">
-                  <span className="label-text">Descripción</span>
-                </label>
-                <textarea
-                  name="description"
-                  rows={3}
-                  className="textarea textarea-bordered"
-                  placeholder="Descripción del producto"
-                  value={currentProduct?.description || ''}
-                  onChange={handleInputChange}
-                ></textarea>
-              </div>
-              
-              <div className="form-control mb-4">
-                <label className="label cursor-pointer justify-start gap-2">
-                  <input
-                    type="checkbox"
-                    className="checkbox"
-                    name="active"
-                    checked={currentProduct?.active || false}
-                    onChange={(e) => {
-                      if (currentProduct) {
-                        setCurrentProduct({
-                          ...currentProduct,
-                          active: e.target.checked
-                        });
-                      }
-                    }}
-                  />
-                  <span className="label-text">Producto activo</span>
-                </label>
-              </div>
-              
-              <div className="modal-action">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={closeModal}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  isLoading={isSubmitting}
-                >
-                  {currentProduct?.id ? 'Guardar cambios' : 'Crear producto'}
-                </Button>
-              </div>
-            </form>
-          </div>
-          <form method="dialog" className="modal-backdrop">
-            <button onClick={closeModal}>cerrar</button>
-          </form>
-        </dialog>
-      )}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        title={currentProduct?.id ? 'Editar Producto' : 'Crear Nuevo Producto'}
+        size="lg"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={closeModal}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={handleSaveProduct}
+              isLoading={isSubmitting}
+            >
+              {currentProduct?.id ? 'Guardar cambios' : 'Crear producto'}
+            </Button>
+          </>
+        }
+      >
+        <form onSubmit={(e) => { e.preventDefault(); handleSaveProduct(e); }}>
+          <FormField
+            label="Nombre del producto"
+            name="name"
+            value={currentProduct?.name || ''}
+            onChange={handleInputChange}
+            error={formErrors.name}
+            required
+          />
+          
+          <FormField
+            label="Precio"
+            name="price"
+            type="number"
+            step="0.01"
+            value={currentProduct?.price || ''}
+            onChange={handleInputChange}
+            error={formErrors.price}
+            required
+          />
+          
+          <FormField
+            label="Categoría"
+            name="category"
+            value={currentProduct?.category || ''}
+            onChange={handleInputChange}
+          />
+          
+          <TextAreaField
+            label="Descripción"
+            name="description"
+            rows={3}
+            placeholder="Descripción del producto"
+            value={currentProduct?.description || ''}
+            onChange={handleInputChange}
+          />
+          
+          <CheckboxField
+            label="Producto activo"
+            name="active"
+            checked={currentProduct?.active || false}
+            onChange={(e) => {
+              if (currentProduct) {
+                setCurrentProduct({
+                  ...currentProduct,
+                  active: e.target.checked
+                });
+              }
+            }}
+          />
+        </form>
+      </Modal>
+
+      {/* Diálogo de confirmación para eliminar producto */}
+      <ConfirmDialog
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={handleDeleteProduct}
+        title="Eliminar Producto"
+        message="¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        type="danger"
+        isLoading={isDeletingProduct}
+      />
     </div>
   );
 }

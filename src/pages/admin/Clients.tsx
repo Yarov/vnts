@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { 
-  PlusIcon, 
+import {
+  PlusIcon,
   MagnifyingGlassIcon,
   PencilIcon,
   TrashIcon,
@@ -40,7 +40,7 @@ export default function Clients() {
         .from('clients')
         .select('*')
         .order('name');
-      
+
       if (error) throw error;
       setClients(data || []);
     } catch (error) {
@@ -56,7 +56,7 @@ export default function Clients() {
     try {
       const { data, error } = await supabase
         .rpc('get_top_clients', { limit_count: 100 });
-      
+
       if (error) throw error;
       setClientStats(data || []);
     } catch (error) {
@@ -65,7 +65,7 @@ export default function Clients() {
   };
 
   // Filtrar clientes según término de búsqueda
-  const filteredClients = clients.filter(client => 
+  const filteredClients = clients.filter(client =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (client.reference && client.reference.toLowerCase().includes(searchTerm.toLowerCase()))
   );
@@ -93,7 +93,7 @@ export default function Clients() {
   // Manejar cambios en el formulario
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
+
     if (currentClient) {
       setCurrentClient({
         ...currentClient,
@@ -105,11 +105,11 @@ export default function Clients() {
   // Validar formulario
   const validateForm = () => {
     const errors: {[key: string]: string} = {};
-    
+
     if (!currentClient?.name) {
       errors.name = 'El nombre es obligatorio';
     }
-    
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -117,11 +117,11 @@ export default function Clients() {
   // Guardar cliente
   const handleSaveClient = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm() || !currentClient) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
       if (currentClient.id) {
         // Actualizar cliente existente
@@ -132,7 +132,7 @@ export default function Clients() {
             reference: currentClient.reference || null
           })
           .eq('id', currentClient.id);
-        
+
         if (error) throw error;
       } else {
         // Crear nuevo cliente
@@ -142,10 +142,10 @@ export default function Clients() {
             name: currentClient.name,
             reference: currentClient.reference || null
           }]);
-        
+
         if (error) throw error;
       }
-      
+
       // Actualizar lista de clientes
       await fetchClients();
       closeModal();
@@ -160,15 +160,15 @@ export default function Clients() {
   // Eliminar un cliente
   const deleteClient = async (id: string) => {
     if (!confirm('¿Estás seguro de que deseas eliminar este cliente?')) return;
-    
+
     try {
       const { error } = await supabase
         .from('clients')
         .delete()
         .eq('id', id);
-      
+
       if (error) throw error;
-      
+
       // Actualizar la lista localmente
       setClients(clients.filter(client => client.id !== id));
     } catch (error) {
@@ -185,33 +185,33 @@ export default function Clients() {
 
   // Columnas para la tabla de clientes
   const columns = [
-    { 
-      header: 'Nombre', 
-      accessor: 'name' 
+    {
+      header: 'Nombre',
+      accessor: 'name'
     },
-    { 
-      header: 'Referencia', 
+    {
+      header: 'Referencia',
       accessor: (client: Client) => client.reference || '-'
     },
-    { 
-      header: 'Compras', 
+    {
+      header: 'Compras',
       accessor: (client: Client) => {
         const stats = getClientStats(client.id);
         return stats.purchase_count || 0;
       },
       className: 'text-center'
     },
-    { 
-      header: 'Última compra', 
+    {
+      header: 'Última compra',
       accessor: (client: Client) => {
         const stats = getClientStats(client.id);
-        return stats.last_purchase 
-          ? new Date(stats.last_purchase).toLocaleDateString() 
+        return stats.last_purchase
+          ? new Date(stats.last_purchase).toLocaleDateString()
           : 'Nunca';
       }
     },
-    { 
-      header: 'Acciones', 
+    {
+      header: 'Acciones',
       accessor: (client: Client) => (
         <div className="flex space-x-2 justify-end">
           <Button
@@ -290,7 +290,7 @@ export default function Clients() {
                 <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
                   {currentClient?.id ? 'Editar Cliente' : 'Crear Nuevo Cliente'}
                 </h3>
-                
+
                 <form onSubmit={handleSaveClient}>
                   <FormField
                     label="Nombre del cliente"
@@ -300,7 +300,7 @@ export default function Clients() {
                     error={formErrors.name}
                     required
                   />
-                  
+
                   <FormField
                     label="Referencia (teléfono, email, etc.)"
                     name="reference"
@@ -309,11 +309,10 @@ export default function Clients() {
                     leftIcon={
                       <div className="flex">
                         <PhoneIcon className="h-5 w-5 text-gray-400 mr-1" />
-                        <EnvelopeIcon className="h-5 w-5 text-gray-400" />
                       </div>
                     }
                   />
-                  
+
                   <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
                     <Button
                       type="submit"

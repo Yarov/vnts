@@ -11,6 +11,9 @@ import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
 import Button from '../../components/ui/Button';
 import FormField from '../../components/ui/FormField';
+import CheckboxField from '../../components/ui/CheckboxField';
+import Modal from '../../components/ui/Modal';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { Database } from '../../types/database.types';
 
 type PaymentMethod = Database['public']['Tables']['payment_methods']['Row'];
@@ -22,6 +25,9 @@ export default function PaymentMethods() {
   const [currentPaymentMethod, setCurrentPaymentMethod] = useState<Partial<PaymentMethod> | null>(null);
   const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [methodToDelete, setMethodToDelete] = useState<string | null>(null);
+  const [isDeletingMethod, setIsDeletingMethod] = useState(false);
 
   // Cargar métodos de pago al montar el componente
   useEffect(() => {
@@ -99,8 +105,8 @@ export default function PaymentMethods() {
   };
 
   // Guardar método de pago
-  const handleSavePaymentMethod = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSavePaymentMethod = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     
     if (!validateForm() || !currentPaymentMethod) return;
     
@@ -165,22 +171,32 @@ export default function PaymentMethods() {
   };
 
   // Eliminar un método de pago
-  const deletePaymentMethod = async (id: string) => {
-    if (!confirm('¿Estás seguro de que deseas eliminar este método de pago?')) return;
+  const confirmDeletePaymentMethod = (id: string) => {
+    setMethodToDelete(id);
+    setIsDeleteConfirmOpen(true);
+  };
+  
+  const handleDeletePaymentMethod = async () => {
+    if (!methodToDelete) return;
+    
+    setIsDeletingMethod(true);
     
     try {
       const { error } = await supabase
         .from('payment_methods')
         .delete()
-        .eq('id', id);
+        .eq('id', methodToDelete);
       
       if (error) throw error;
       
       // Actualizar la lista localmente
-      setPaymentMethods(paymentMethods.filter(method => method.id !== id));
+      setPaymentMethods(paymentMethods.filter(method => method.id !== methodToDelete));
+      setIsDeleteConfirmOpen(false);
     } catch (error) {
       console.error('Error al eliminar método de pago:', error);
       alert('Error al eliminar método de pago. Puede que tenga ventas asociadas.');
+    } finally {
+      setIsDeletingMethod(false);
     }
   };
 
@@ -225,7 +241,7 @@ export default function PaymentMethods() {
           <Button
             variant="danger"
             size="sm"
-            onClick={() => deletePaymentMethod(method.id)}
+            onClick={() => confirmDeletePaymentMethod(method.id)}
             icon={<TrashIcon className="h-4 w-4" />}
           >
             Eliminar
@@ -266,69 +282,63 @@ export default function PaymentMethods() {
       </Card>
 
       {/* Modal de creación/edición de método de pago */}
-      {isModalOpen && (
-        <div className="fixed inset-0 overflow-y-auto z-50">
-          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            {/* Backdrop */}
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-
-            {/* Modal */}
-            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-              <div>
-                <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                  {currentPaymentMethod?.id ? 'Editar Método de Pago' : 'Crear Nuevo Método de Pago'}
-                </h3>
-                
-                <form onSubmit={handleSavePaymentMethod}>
-                  <FormField
-                    label="Nombre del método de pago"
-                    name="name"
-                    value={currentPaymentMethod?.name || ''}
-                    onChange={handleInputChange}
-                    error={formErrors.name}
-                    required
-                  />
-                  
-                  <div className="flex items-center mb-4">
-                    <input
-                      id="active"
-                      name="active"
-                      type="checkbox"
-                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                      checked={currentPaymentMethod?.active || false}
-                      onChange={handleInputChange}
-                    />
-                    <label htmlFor="active" className="ml-2 block text-sm text-gray-900">
-                      Método activo
-                    </label>
-                  </div>
-                  
-                  <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-                    <Button
-                      type="submit"
-                      variant="primary"
-                      isLoading={isSubmitting}
-                      className="sm:col-start-2"
-                    >
-                      {currentPaymentMethod?.id ? 'Guardar cambios' : 'Crear método'}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={closeModal}
-                      className="mt-3 sm:mt-0 sm:col-start-1"
-                    >
-                      Cancelar
-                    </Button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        title={currentPaymentMethod?.id ? 'Editar Método de Pago' : 'Crear Nuevo Método de Pago'}
+        size="md"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={closeModal}
+              className="ml-2"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={handleSavePaymentMethod}
+              isLoading={isSubmitting}
+            >
+              {currentPaymentMethod?.id ? 'Guardar cambios' : 'Crear método'}
+            </Button>
+          </>
+        }
+      >
+        <form onSubmit={(e) => { e.preventDefault(); handleSavePaymentMethod(e); }}>
+          <FormField
+            label="Nombre del método de pago"
+            name="name"
+            value={currentPaymentMethod?.name || ''}
+            onChange={handleInputChange}
+            error={formErrors.name}
+            required
+          />
+          
+          <CheckboxField
+            label="Método activo"
+            name="active"
+            checked={currentPaymentMethod?.active || false}
+            onChange={handleInputChange}
+          />
+        </form>
+      </Modal>
+      
+      {/* Diálogo de confirmación para eliminar método de pago */}
+      <ConfirmDialog
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={handleDeletePaymentMethod}
+        title="Eliminar Método de Pago"
+        message="¿Estás seguro de que deseas eliminar este método de pago? Esta acción no se puede deshacer y podría afectar a las ventas registradas."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        type="danger"
+        isLoading={isDeletingMethod}
+      />
     </div>
   );
 }
