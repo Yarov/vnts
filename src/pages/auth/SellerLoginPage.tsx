@@ -15,15 +15,22 @@ interface SellerLoginPageProps {
 export default function SellerLoginPage({ onLogin }: SellerLoginPageProps) {
   const [code, setCode] = useState('');
   const navigate = useNavigate();
-  const { loading, error, signInAsSeller } = useAuth();
+  const { loading, error } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const success = await signInAsSeller(code);
+    // signInAsSeller ahora retorna true/false, pero necesitamos el usuario para obtener el UUID y nombre
+    const { userData, success } = await (async () => {
+      // Hook useAuth no retorna el usuario, así que replicamos la lógica aquí
+      // Usamos loginAsSeller directamente
+      const { loginAsSeller } = await import('../../services/authService');
+      const user = await loginAsSeller(code);
+      return { userData: user, success: !!user };
+    })();
 
-    if (success) {
-      onLogin(code, 'Vendedor'); // Use a default name since we don't have it yet
+    if (success && userData) {
+      onLogin(userData.id, userData.name || 'Vendedor');
       navigate('/seller');
     }
   };

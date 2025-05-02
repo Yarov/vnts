@@ -300,7 +300,7 @@ export function useAdminReports(): UseAdminReportsReturn {
       setCommissions(commissionsData);
 
       // Consulta detallada de ventas con items
-      const { data: ventasData, error: ventasError } = await supabase
+      let salesQuery = supabase
         .from('sales')
         .select(`
           id,
@@ -333,21 +333,15 @@ export function useAdminReports(): UseAdminReportsReturn {
         .lte('created_at', endDateStr)
         .order('created_at', { ascending: false });
 
-      if (ventasError) throw ventasError;
-
-      // Filtrar por vendedor si es necesario
-      let filteredSales = ventasData || [] as RawSale[];
-      if (selectedSellerId) {
-        filteredSales = filteredSales.filter((sale: RawSale) => {
-          if (!sale.seller || typeof sale.seller !== 'object' || Array.isArray(sale.seller)) {
-            return false;
-          }
-          return sale.seller.id === selectedSellerId;
-        });
+      if (selectedSellerId && selectedSellerId !== '') {
+        salesQuery = salesQuery.eq('seller_id', selectedSellerId);
       }
 
+      const { data: ventasData, error: ventasError } = await salesQuery;
+      if (ventasError) throw ventasError;
+
       // Convertir ventas al formato esperado
-      const typedSales: DetailedSale[] = filteredSales.map((sale: RawSale) => {
+      const typedSales: DetailedSale[] = ventasData.map((sale: RawSale) => {
         // Extraer datos del vendedor
         const sellerData = sale.seller && typeof sale.seller === 'object' && !Array.isArray(sale.seller)
           ? {
@@ -413,7 +407,7 @@ export function useAdminReports(): UseAdminReportsReturn {
       setVentas(typedSales);
 
       // Consulta resumida de ventas para estadísticas
-      const { data: salesData, error: salesError } = await supabase
+      let statsQuery = supabase
         .from('sales')
         .select(`
           id,
@@ -424,16 +418,15 @@ export function useAdminReports(): UseAdminReportsReturn {
         .gte('created_at', startDateStr)
         .lte('created_at', endDateStr);
 
-      if (salesError) throw salesError;
-
-      // Filtrar ventas por vendedor si es necesario
-      let filteredStatsData = salesData || [];
-      if (selectedSellerId) {
-        filteredStatsData = filteredStatsData.filter(sale => sale.seller_id === selectedSellerId);
+      if (selectedSellerId && selectedSellerId !== '') {
+        statsQuery = statsQuery.eq('seller_id', selectedSellerId);
       }
 
+      const { data: salesData, error: salesError } = await statsQuery;
+      if (salesError) throw salesError;
+
       // Calcular total de ventas
-      const total = filteredStatsData.reduce((sum, sale) => sum + parseFloat(sale.total), 0);
+      const total = salesData.reduce((sum, sale) => sum + parseFloat(sale.total), 0);
       setTotalSales(total);
 
       // Consulta de items de venta
@@ -490,7 +483,7 @@ export function useAdminReports(): UseAdminReportsReturn {
 
       // Agrupar ventas por día
       const dailyMap = {} as Record<string, { date: string; total: number; count: number }>;
-      (filteredStatsData || []).forEach(sale => {
+      (salesData || []).forEach(sale => {
         const date = new Date(sale.created_at).toISOString().split('T')[0];
         if (!dailyMap[date]) {
           dailyMap[date] = {

@@ -121,38 +121,41 @@ export function useSellerNewSale() {
     try {
       const client = await getOrCreateClient(clientReference.trim());
       if (!client) throw new Error('Error al obtener o crear el cliente');
-      if (selectedProduct) {
-        const saleData = {
-          seller_id: user?.id || '',
-          client_id: client.id,
-          payment_method_id: selectedPaymentMethodId,
-          total: calculateTotal(),
-          notes: notes.trim() || null,
-          items: [
-            {
-              product_id: selectedProduct.id,
-              product_name: selectedProduct.name,
-              quantity: 1,
-              price: Number(selectedProduct.price),
-              subtotal: Number(selectedProduct.price)
-            }
-          ],
-          client_name: client.name
-        };
-        const result = await processSale(saleData);
-        if (result) {
-          setIsSuccess(true);
-          setTimeout(() => {
-            resetSale();
-            navigate('/seller');
-          }, 2000);
-        } else {
-          throw new Error('Error al procesar venta');
-        }
+      if (!user?.id) throw new Error('El vendedor no está autenticado.');
+      if (!selectedProduct) throw new Error('No hay producto seleccionado.');
+      if (!selectedPaymentMethodId) throw new Error('No hay método de pago seleccionado.');
+      const total = calculateTotal();
+      if (!total || isNaN(total) || total <= 0) throw new Error('El total de la venta no es válido.');
+      const saleData = {
+        seller_id: user.id,
+        client_id: client.id,
+        payment_method_id: selectedPaymentMethodId,
+        total,
+        notes: notes.trim() || null,
+        items: [
+          {
+            product_id: selectedProduct.id,
+            product_name: selectedProduct.name,
+            quantity: 1,
+            price: Number(selectedProduct.price),
+            subtotal: Number(selectedProduct.price)
+          }
+        ],
+        client_name: client.name
+      };
+      const result = await processSale(saleData);
+      if (result) {
+        setIsSuccess(true);
+        setTimeout(() => {
+          resetSale();
+          navigate('/seller');
+        }, 2000);
+      } else {
+        throw new Error('Error al procesar venta');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al procesar venta:', error);
-      alert('Error al procesar venta. Por favor, intenta de nuevo.');
+      alert('Error al procesar venta.\n' + (error?.message || 'Por favor, intenta de nuevo.'));
     } finally {
       setIsLoading(false);
     }
