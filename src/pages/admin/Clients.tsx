@@ -152,7 +152,6 @@ export default function Clients() {
                 </div>
                 {/* Menú de acciones */}
                 <MobileClientActions
-                  client={client}
                   onEdit={() => openClientModal(client)}
                   onDelete={() => handleDeleteClient(client.id)}
                 />
@@ -217,8 +216,7 @@ export default function Clients() {
 }
 
 // Componente de acciones mobile
-function MobileClientActions({ client, onEdit, onDelete }: {
-  client: any;
+function MobileClientActions({ onEdit, onDelete }: {
   onEdit: () => void;
   onDelete: () => void;
 }) {

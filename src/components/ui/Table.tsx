@@ -123,9 +123,6 @@ export default function DataTable<T>({
     }
   };
 
-  // Filtrar columnas visibles en mobile
-  const visibleColumns = columns.filter(col => !col.hideOnMobile);
-
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-8">
