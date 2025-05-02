@@ -1,4 +1,4 @@
-import { startOfDay, endOfDay, subDays, subWeeks, subMonths, format } from 'date-fns';
+import { startOfDay, endOfDay, subDays, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 /**
@@ -23,49 +23,49 @@ export const getDateRangeFromValue = (value: string): { start: Date; end: Date }
   const now = new Date();
   const today = startOfDay(now);
   const end = endOfDay(now);
-  
+
   switch (value) {
     case 'today':
       return { start: today, end };
-      
+
     case 'yesterday': {
       const yesterday = subDays(today, 1);
-      return { 
-        start: yesterday, 
-        end: endOfDay(yesterday) 
+      return {
+        start: yesterday,
+        end: endOfDay(yesterday)
       };
     }
-      
+
     case 'last7days':
-      return { 
-        start: subDays(today, 6), 
-        end 
+      return {
+        start: subDays(today, 6),
+        end
       };
-      
+
     case 'last30days':
-      return { 
-        start: subDays(today, 29), 
-        end 
+      return {
+        start: subDays(today, 29),
+        end
       };
-      
+
     case 'thisMonth': {
       const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      return { 
-        start: thisMonth, 
-        end 
+      return {
+        start: thisMonth,
+        end
       };
     }
-      
+
     case 'lastMonth': {
       const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      
-      return { 
-        start: lastMonth, 
-        end: subDays(thisMonth, 1) 
+
+      return {
+        start: lastMonth,
+        end: subDays(thisMonth, 1)
       };
     }
-      
+
     case 'custom':
     default:
       return { start: subDays(today, 30), end };
@@ -80,19 +80,19 @@ export const getDateRangeFromValue = (value: string): { start: Date; end: Date }
  */
 export const getDateRangeDescription = (start: Date, end: Date): string => {
   const formatOpt = { locale: es };
-  
+
   if (format(start, 'yyyy-MM-dd') === format(end, 'yyyy-MM-dd')) {
     return `${format(start, "d 'de' MMMM 'de' yyyy", formatOpt)}`;
   }
-  
+
   if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
     return `${format(start, "d", formatOpt)} - ${format(end, "d 'de' MMMM 'de' yyyy", formatOpt)}`;
   }
-  
+
   if (start.getFullYear() === end.getFullYear()) {
     return `${format(start, "d 'de' MMMM", formatOpt)} - ${format(end, "d 'de' MMMM 'de' yyyy", formatOpt)}`;
   }
-  
+
   return `${format(start, "d 'de' MMMM 'de' yyyy", formatOpt)} - ${format(end, "d 'de' MMMM 'de' yyyy", formatOpt)}`;
 };
 
@@ -111,7 +111,7 @@ export const formatPieChartData = (
   maxItems: number = 5
 ): { label: string; value: number; color: string }[] => {
   if (!data || data.length === 0) return [];
-  
+
   // Colores para las gráficas
   const colors = [
     '#8884d8',
@@ -124,29 +124,29 @@ export const formatPieChartData = (
     '#ff8042',
     '#a4de6c'
   ];
-  
+
   // Clonar y ordenar datos
   const sortedData = [...data].sort((a, b) => b[valueField] - a[valueField]);
-  
+
   // Si hay más items de los especificados, agrupar el resto
   if (sortedData.length > maxItems) {
     const topItems = sortedData.slice(0, maxItems);
     const otherItems = sortedData.slice(maxItems);
-    
+
     const othersValue = otherItems.reduce((sum, item) => sum + Number(item[valueField]), 0);
-    
+
     topItems.push({
       [labelField]: 'Otros',
       [valueField]: othersValue
     });
-    
+
     return topItems.map((item, index) => ({
       label: item[labelField],
       value: Number(item[valueField]),
       color: colors[index % colors.length]
     }));
   }
-  
+
   // Si no hay suficientes items, devolver todos
   return sortedData.map((item, index) => ({
     label: item[labelField],
@@ -170,12 +170,12 @@ export const formatBarChartData = (
   maxItems: number = 10
 ): { name: string; value: number }[] => {
   if (!data || data.length === 0) return [];
-  
+
   // Clonar y ordenar datos
   const sortedData = [...data]
     .sort((a, b) => b[valueField] - a[valueField])
     .slice(0, maxItems);
-  
+
   return sortedData.map(item => ({
     name: item[labelField],
     value: Number(item[valueField])
@@ -195,7 +195,7 @@ export const formatLineChartData = (
   valueField: string
 ): { date: string; value: number }[] => {
   if (!data || data.length === 0) return [];
-  
+
   return data.map(item => ({
     date: format(new Date(item[dateField]), 'dd/MM/yyyy'),
     value: Number(item[valueField])

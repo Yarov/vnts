@@ -5,13 +5,12 @@ import { userAtom } from '../../store/auth';
 
 // Iconos
 import {
-  HomeIcon,
-  ShoppingCartIcon,
-  ClockIcon,
+  ArrowLeftOnRectangleIcon,
   Bars3Icon,
   XMarkIcon,
-  ArrowRightOnRectangleIcon,
-  Cog6ToothIcon
+  HomeIcon,
+  ShoppingCartIcon,
+  ClockIcon
 } from '@heroicons/react/24/outline';
 
 const navigation = [
@@ -109,7 +108,7 @@ export default function SellerLayout() {
                   onClick={handleLogout}
                   className="text-xs text-gray-500 hover:text-gray-700 flex items-center mt-1"
                 >
-                  <ArrowRightOnRectangleIcon className="h-3 w-3 mr-1" />
+                  <ArrowLeftOnRectangleIcon className="h-3 w-3 mr-1" />
                   Cerrar sesión
                 </button>
               </div>
@@ -163,7 +162,7 @@ export default function SellerLayout() {
                     onClick={handleLogout}
                     className="text-xs text-gray-500 hover:text-gray-700 flex items-center mt-1"
                   >
-                    <ArrowRightOnRectangleIcon className="h-3 w-3 mr-1" />
+                    <ArrowLeftOnRectangleIcon className="h-3 w-3 mr-1" />
                     Cerrar sesión
                   </button>
                 </div>
@@ -189,11 +188,11 @@ export default function SellerLayout() {
               <h1 className="text-xl font-semibold text-gray-800">{getCurrentPageTitle()}</h1>
             </div>
             <div className="ml-4 flex items-center md:ml-6">
-              <button 
+              <button
                 onClick={handleLogout}
                 className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors font-medium flex items-center"
               >
-                <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2" />
+                <ArrowLeftOnRectangleIcon className="h-5 w-5 mr-2" />
                 Terminar Venta
               </button>
             </div>

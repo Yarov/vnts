@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAtom } from 'jotai';
-import { userAtom, User } from '../store/auth';
+import { userAtom } from '../store/auth';
 import { loginAsAdmin, loginAsSeller, logout } from '../services/authService';
 
 /**

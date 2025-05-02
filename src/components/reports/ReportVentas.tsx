@@ -11,7 +11,7 @@ import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Badge from '../ui/Badge';
 import { formatCurrency, formatDate } from '../../utils/formatters';
-import { useSalesReport, SaleStats } from '../../hooks/useSalesReport';
+import { useSalesReport } from '../../hooks/useSalesReport';
 import { DollarSign, ShoppingCart, CreditCard, Users, ChevronDown, ChevronUp, Download, RefreshCw, X } from 'lucide-react';
 import { exportSalesToExcel } from '../../utils/exportToExcel';
 import ReportCard from './ReportCard';

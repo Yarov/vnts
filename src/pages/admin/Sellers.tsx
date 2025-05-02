@@ -1,14 +1,11 @@
 import { useAdminSellers } from '../../hooks/useAdminSellers';
-import { useState, useEffect } from 'react';
 import {
   PlusIcon,
   MagnifyingGlassIcon,
   PencilIcon,
   TrashIcon,
   CheckCircleIcon,
-  XCircleIcon,
-  IdentificationIcon,
-  CurrencyDollarIcon
+  XCircleIcon
 } from '@heroicons/react/24/outline';
 import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
@@ -33,7 +30,6 @@ export default function Sellers() {
     currentSeller,
     setCurrentSeller,
     formErrors,
-    setFormErrors,
     isSubmitting,
     handleInputChange,
     handleSaveSeller,
@@ -162,7 +158,7 @@ export default function Sellers() {
               type="button"
               variant="primary"
               onClick={handleSaveSeller}
-              loading={isSubmitting}
+              isLoading={isSubmitting}
             >
               {currentSeller?.id ? 'Guardar cambios' : 'Crear vendedor'}
             </Button>

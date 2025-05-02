@@ -25,7 +25,6 @@ export default function NewSale() {
     errors,
     calculateTotal,
     handleSale,
-    resetSale,
     renderPaymentMethodIcon
   } = useSellerNewSale();
 

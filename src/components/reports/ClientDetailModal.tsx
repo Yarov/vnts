@@ -14,30 +14,9 @@ import {
   TableRow,
 } from '../ui/Table';
 import { formatCurrency, formatDate } from '../../utils/formatters';
-import { ClientWithStats } from '../../hooks/useClientReport';
+import { ClientStats } from '../../hooks/useClientReport';
 import { supabase } from '../../lib/supabase';
 import { Calendar, DollarSign, ShoppingCart } from 'lucide-react';
-import Button from '../ui/Button';
-
-interface SaleItem {
-  product_name: {
-    name: string;
-  };
-  quantity: number;
-  price: number;
-  subtotal: number;
-}
-
-interface RawSale {
-  id: string;
-  created_at: string;
-  total: number;
-  items: SaleItem[];
-  seller: {
-    id: string;
-    name: string;
-  };
-}
 
 interface Sale {
   id: string;
@@ -54,7 +33,7 @@ interface Sale {
 }
 
 interface ClientDetailModalProps {
-  client: ClientWithStats | null;
+  client: ClientStats | null;
   isOpen: boolean;
   onClose: () => void;
 }

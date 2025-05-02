@@ -7,7 +7,6 @@ import ThemeProvider from './components/ThemeProvider';
 
 // Layout Components
 import AdminLayout from './components/layouts/AdminLayout';
-import SellerLayout from './components/layouts/SellerLayout';
 import SimplifiedSellerLayout from './components/layouts/SimplifiedSellerLayout';
 
 // Auth Pages

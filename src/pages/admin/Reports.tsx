@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ReportsTabs from '../../components/reports/ReportsTabs';
 import ReportsFilters from '../../components/reports/ReportsFilters';
@@ -23,7 +23,6 @@ export default function Reports() {
     setSelectedSellerId,
     topProducts,
     dailySales,
-    totalSales,
     activeTab,
     setActiveTab,
     topClientes,
@@ -95,18 +94,9 @@ export default function Reports() {
         setSelectedSellerId={setSelectedSellerId}
         onReset={handleResetFilters}
         onExport={handleExport}
-        formatDate={formatDate}
       />
       {activeTab === 'resumen' && (
         <ReportResumenGeneral
-          resumen={{
-            totalVentas: totalSales,
-            ventasHoy: dailySales.length > 0 ? dailySales[dailySales.length - 1].total : 0,
-            ventasSemana: dailySales.slice(-7).reduce((sum, d) => sum + d.total, 0),
-            productosActivos: topProducts.length,
-            cambioDiario: { value: 0, isPositive: true },
-            cambioSemanal: { value: 0, isPositive: true },
-          }}
           topProductos={topProducts}
           topClientes={topClientes}
           ventasDiarias={dailySales}
@@ -131,9 +121,7 @@ export default function Reports() {
           commissions={commissions}
           ventasPorVendedor={ventasPorVendedor}
           formatCurrency={formatCurrency}
-          formatDate={formatDate}
           isLoading={isLoading}
-          periodLabel={periodLabel}
         />
       )}
       {activeTab !== 'resumen' &&

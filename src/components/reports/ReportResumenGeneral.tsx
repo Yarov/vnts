@@ -12,12 +12,8 @@ import {
 import Badge from '../ui/Badge';
 import { CurrencyDollarIcon, ReceiptPercentIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
 import {
-  TrendingUpIcon,
-  TrendingDownIcon,
   DollarSign,
   ShoppingCart,
-  Package2,
-  Users,
   Wallet,
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -44,14 +40,6 @@ interface CommissionItem {
 }
 
 interface ReportResumenGeneralProps {
-  resumen: {
-    totalVentas: number;
-    ventasHoy: number;
-    ventasSemana: number;
-    productosActivos: number;
-    cambioDiario: { value: number; isPositive: boolean };
-    cambioSemanal: { value: number; isPositive: boolean };
-  };
   topProductos: TopProductoItem[];
   topClientes: TopClienteItem[];
   ventasDiarias: Array<{
@@ -67,7 +55,6 @@ interface ReportResumenGeneralProps {
 }
 
 const ReportResumenGeneral: React.FC<ReportResumenGeneralProps> = ({
-  resumen,
   topProductos,
   topClientes,
   ventasDiarias,
@@ -77,20 +64,6 @@ const ReportResumenGeneral: React.FC<ReportResumenGeneralProps> = ({
   isLoading,
   periodLabel = 'diario',
 }) => {
-  // Columnas para tabla de productos
-  const productColumns = [
-    { header: 'Producto', accessor: 'name' },
-    { header: 'Unidades vendidas', accessor: 'quantity', className: 'text-center' },
-    { header: 'Total', accessor: (item: any) => formatCurrency(item.total), className: 'text-right font-medium' }
-  ];
-
-  // Columnas para tabla de clientes
-  const clientColumns = [
-    { header: 'Cliente', accessor: 'name' },
-    { header: 'Compras', accessor: (item: any) => <Badge color="purple" className="mx-auto">{item.purchase_count}</Badge>, className: 'text-center' },
-    { header: 'Última compra', accessor: (item: any) => formatDate(item.last_purchase, 'dd/MM/yyyy'), className: 'text-center' }
-  ];
-
   // KPIs adicionales
   const totalPeriodo = ventasDiarias.reduce((sum, d) => sum + d.total, 0);
   const cantidadVentas = ventasDiarias.reduce((sum, d) => sum + (d.count || 0), 0);

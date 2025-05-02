@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { User, UserRole } from '../store/auth';
+import { User } from '../store/auth';
 
 /**
  * Verifica si un usuario es administrador
@@ -59,11 +59,11 @@ export const loginAsAdmin = async (email: string, password: string): Promise<Use
     });
 
     if (error) throw error;
-    
+
     if (data.user) {
       // Verificar si es admin
       const isAdmin = await isUserAdmin(data.user.id);
-      
+
       if (isAdmin) {
         return {
           id: data.user.id,
@@ -72,7 +72,7 @@ export const loginAsAdmin = async (email: string, password: string): Promise<Use
         };
       }
     }
-    
+
     return null;
   } catch (error) {
     console.error('Error de inicio de sesión:', error);
@@ -88,7 +88,7 @@ export const loginAsAdmin = async (email: string, password: string): Promise<Use
 export const loginAsSeller = async (code: string): Promise<User | null> => {
   try {
     const seller = await validateSellerCode(code);
-    
+
     if (seller) {
       return {
         id: seller.id,
@@ -96,7 +96,7 @@ export const loginAsSeller = async (code: string): Promise<User | null> => {
         role: 'seller'
       };
     }
-    
+
     return null;
   } catch (error) {
     console.error('Error de inicio de sesión como vendedor:', error);
@@ -157,9 +157,9 @@ export const getAllSellerCommissions = async (startDate?: string, endDate?: stri
 export const logout = async (): Promise<boolean> => {
   try {
     const { error } = await supabase.auth.signOut();
-    
+
     if (error) throw error;
-    
+
     return true;
   } catch (error) {
     console.error('Error al cerrar sesión:', error);

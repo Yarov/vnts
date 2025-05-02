@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { RealtimeChannel } from '@supabase/supabase-js';
+import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 interface AppSettings {
   primary_color: string;
 }
 
-interface AppSettingRecord {
+interface AppSettingsRecord {
   key: string;
   value: string;
 }
+
+type AppSettingsPayload = RealtimePostgresChangesPayload<AppSettingsRecord>;
 
 // Función para validar formato de color hexadecimal
 const isValidHexColor = (color: string): boolean => {
@@ -36,7 +38,7 @@ const normalizeColor = (color: string): string => {
 
 export function useAppSettings() {
   const [settings, setSettings] = useState<AppSettings>({
-    primary_color: 'transparent', // Color por defecto transparente
+    primary_color: '#3B82F6', // Color por defecto azul
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +59,52 @@ export function useAppSettings() {
       `color-mix(in srgb, ${color} 15%, white)`
     );
 
+    // Aplicar variantes de Tailwind
+    document.documentElement.style.setProperty(
+      '--primary-50',
+      `color-mix(in srgb, ${color} 5%, white)`
+    );
+    document.documentElement.style.setProperty(
+      '--primary-100',
+      `color-mix(in srgb, ${color} 10%, white)`
+    );
+    document.documentElement.style.setProperty(
+      '--primary-200',
+      `color-mix(in srgb, ${color} 20%, white)`
+    );
+    document.documentElement.style.setProperty(
+      '--primary-300',
+      `color-mix(in srgb, ${color} 30%, white)`
+    );
+    document.documentElement.style.setProperty(
+      '--primary-400',
+      `color-mix(in srgb, ${color} 40%, white)`
+    );
+    document.documentElement.style.setProperty(
+      '--primary-500',
+      color
+    );
+    document.documentElement.style.setProperty(
+      '--primary-600',
+      `color-mix(in srgb, ${color} 85%, black)`
+    );
+    document.documentElement.style.setProperty(
+      '--primary-700',
+      `color-mix(in srgb, ${color} 70%, black)`
+    );
+    document.documentElement.style.setProperty(
+      '--primary-800',
+      `color-mix(in srgb, ${color} 55%, black)`
+    );
+    document.documentElement.style.setProperty(
+      '--primary-900',
+      `color-mix(in srgb, ${color} 40%, black)`
+    );
+    document.documentElement.style.setProperty(
+      '--primary-950',
+      `color-mix(in srgb, ${color} 25%, black)`
+    );
+
     // Remover la transición después de un momento para que no afecte otros cambios
     setTimeout(() => {
       document.documentElement.style.removeProperty('transition');
@@ -71,9 +119,15 @@ export function useAppSettings() {
       const { data, error } = await supabase
         .from('app_settings')
         .select('*')
+        .eq('key', 'primary_color')
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.warn('Error al cargar configuración:', error);
+        // Si no hay datos, usar el color por defecto y seguir
+        applyColorWithTransition(settings.primary_color);
+        return;
+      }
 
       if (data) {
         const newSettings = {
@@ -81,10 +135,22 @@ export function useAppSettings() {
         };
         setSettings(newSettings);
         applyColorWithTransition(data.value);
+      } else {
+        // Si no hay datos, insertar el color por defecto
+        const { error: insertError } = await supabase
+          .from('app_settings')
+          .insert([{ key: 'primary_color', value: settings.primary_color }]);
+
+        if (insertError) {
+          console.error('Error al insertar configuración predeterminada:', insertError);
+        }
+        applyColorWithTransition(settings.primary_color);
       }
     } catch (error: any) {
       console.error('Error al cargar configuración:', error);
       setError('Error al cargar la configuración');
+      // Usar color por defecto en caso de error
+      applyColorWithTransition(settings.primary_color);
     } finally {
       setIsLoading(false);
     }
@@ -113,15 +179,32 @@ export function useAppSettings() {
         applyColorWithTransition(value);
       }
 
-      const { error } = await supabase
+      // Verificar si el registro existe
+      const { data: existingData } = await supabase
         .from('app_settings')
-        .update({ value })
-        .eq('key', key);
+        .select('*')
+        .eq('key', key)
+        .single();
 
-      if (error) {
+      let result;
+
+      if (existingData) {
+        // Actualizar registro existente
+        result = await supabase
+          .from('app_settings')
+          .update({ value })
+          .eq('key', key);
+      } else {
+        // Insertar nuevo registro
+        result = await supabase
+          .from('app_settings')
+          .insert([{ key, value }]);
+      }
+
+      if (result.error) {
         // Si hay error, revertir al estado anterior
         await fetchSettings();
-        throw error;
+        throw result.error;
       }
 
       return true;
@@ -134,31 +217,37 @@ export function useAppSettings() {
 
   // Suscribirse a cambios en tiempo real
   useEffect(() => {
+    // Aplicar color por defecto inmediatamente para evitar flash de colores
+    applyColorWithTransition(settings.primary_color);
+
+    // Cargar configuración
     fetchSettings();
 
-    const channel: RealtimeChannel = supabase
+    // Configurar escucha de cambios en tiempo real
+    const channel = supabase
       .channel('app_settings_changes')
       .on(
-        'postgres_changes' as any,
+        'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'app_settings'
         },
-        (payload: { new: AppSettingRecord }) => {
-          if (payload.new) {
+        (payload: AppSettingsPayload) => {
+          const newRecord = payload.new as AppSettingsRecord | null;
+          if (newRecord && newRecord.key === 'primary_color') {
             setSettings(prev => ({
               ...prev,
-              primary_color: payload.new.value
+              primary_color: newRecord.value
             }));
-            applyColorWithTransition(payload.new.value);
+            applyColorWithTransition(newRecord.value);
           }
         }
       )
       .subscribe();
 
     return () => {
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, []);
 

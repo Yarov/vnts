@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 interface RadioOption {
   value: string;
@@ -52,8 +52,8 @@ const RadioGroup: React.FC<RadioGroupProps> = ({
               />
             </div>
             <div className="ml-3 text-sm">
-              <label 
-                htmlFor={`${name}-${option.value}`} 
+              <label
+                htmlFor={`${name}-${option.value}`}
                 className={`font-medium ${disabled ? 'text-gray-400' : 'text-gray-700'}`}
               >
                 {option.label}

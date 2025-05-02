@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { getTodayRange, getCurrentDate, getYesterdayDate, getWeekStartDate, getPreviousWeekStartDate } from '../utils/dateUtils';
+import { getTodayRange } from '../utils/dateUtils';
 import { getAllSellerCommissions } from './authService';
 import { getTopProducts } from './productService';
 import { getTopClients } from './clientService';
@@ -120,7 +120,7 @@ export const getSellerSales = async (startDate?: Date) => {
 
     // Agrupar ventas por vendedor
     const sellerSalesMap = (sellerData || []).reduce((acc: { [key: string]: any }, sale) => {
-      const sellerName = sale.sellers.name;
+      const sellerName = sale.sellers[0]?.name;
 
       if (!acc[sellerName]) {
         acc[sellerName] = {

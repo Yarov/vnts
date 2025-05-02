@@ -1,4 +1,4 @@
-import React, { SelectHTMLAttributes, ReactNode, forwardRef } from 'react';
+import { SelectHTMLAttributes, ReactNode, forwardRef } from 'react';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 
 interface SelectOption {

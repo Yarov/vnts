@@ -15,7 +15,7 @@ import { getAllProducts, getProductCategories } from '../services/productService
  */
 export function useProducts() {
   // Estados de Jotai
-  const [products, setProducts] = useAtom(productsAtom);
+  const [, setProducts] = useAtom(productsAtom);
   const [loading, setLoading] = useAtom(loadingProductsAtom);
   const [searchQuery, setSearchQuery] = useAtom(searchProductsAtom);
   const [categoryFilter, setCategoryFilter] = useAtom(productCategoryFilterAtom);

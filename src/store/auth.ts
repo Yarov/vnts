@@ -1,4 +1,3 @@
-import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 
 // Tipos
@@ -8,6 +7,7 @@ export interface User {
   id: string;
   email: string;
   role: UserRole;
+  name?: string;
 }
 
 // Atom para el usuario actual con persistencia en localStorage

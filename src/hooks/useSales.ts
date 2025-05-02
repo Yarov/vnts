@@ -15,7 +15,7 @@ export function useSales(
   initialSellerId: string = ''
 ) {
   // Estados de Jotai
-  const [sales, setSales] = useAtom(salesAtom);
+  const [, setSales] = useAtom(salesAtom);
   const [loading, setLoading] = useAtom(loadingSalesAtom);
   const [dateFilter, setDateFilter] = useAtom(salesDateFilterAtom);
   const [sellerFilter, setSellerFilter] = useAtom(salesSellerFilterAtom);
@@ -77,12 +77,12 @@ export function useSales(
 
     try {
       const salesData = await getSalesWithDetails(
-        dateFilter.start,
-        dateFilter.end,
+        dateFilter.start || undefined,
+        dateFilter.end || undefined,
         sellerFilter || undefined
       );
 
-      setSales(salesData);
+      setSales(salesData as any);
       setCurrentPage(1);
     } catch (error) {
       console.error('Error al cargar ventas:', error);

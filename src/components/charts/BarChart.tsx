@@ -79,7 +79,7 @@ export default function BarChart({
   // Datos formateados para Chart.js
   const chartData = {
     labels: chartLabels,
-    datasets: chartDatasets.map((dataset, idx) => ({
+    datasets: chartDatasets.map((dataset) => ({
       label: dataset.label,
       data: dataset.data,
       backgroundColor: dataset.backgroundColor || chartLabels.map((_, i) => PRIMARY_COLORS[i % PRIMARY_COLORS.length]),

@@ -11,7 +11,7 @@ import {
   Filler,
   ChartOptions,
 } from 'chart.js';
-import React, { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 
 ChartJS.register(
   CategoryScale,

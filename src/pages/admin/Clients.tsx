@@ -10,10 +10,7 @@ import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
 import Button from '../../components/ui/Button';
 import FormField from '../../components/ui/FormField';
-import { Database } from '../../types/database.types';
 import Modal from '../../components/ui/Modal';
-
-type Client = Database['public']['Tables']['clients']['Row'];
 
 export default function Clients() {
   const {
@@ -154,7 +151,7 @@ export default function Clients() {
             <Button
               type="submit"
               variant="primary"
-              loading={isSubmitting}
+              isLoading={isSubmitting}
               className="sm:col-start-2"
             >
               {currentClient?.id ? 'Guardar cambios' : 'Crear cliente'}

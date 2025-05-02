@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 
 export function Table({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (

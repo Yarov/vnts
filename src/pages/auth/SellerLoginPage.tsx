@@ -8,7 +8,11 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../hooks/useAuth';
 
-export default function SellerLoginPage() {
+interface SellerLoginPageProps {
+  onLogin: (sellerId: string, sellerName: string) => void;
+}
+
+export default function SellerLoginPage({ onLogin }: SellerLoginPageProps) {
   const [code, setCode] = useState('');
   const navigate = useNavigate();
   const { loading, error, signInAsSeller } = useAuth();
@@ -19,6 +23,7 @@ export default function SellerLoginPage() {
     const success = await signInAsSeller(code);
 
     if (success) {
+      onLogin(code, 'Vendedor'); // Use a default name since we don't have it yet
       navigate('/seller');
     }
   };

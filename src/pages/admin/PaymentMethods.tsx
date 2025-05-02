@@ -27,7 +27,6 @@ export default function PaymentMethods() {
     currentPaymentMethod,
     setCurrentPaymentMethod,
     formErrors,
-    setFormErrors,
     isSubmitting,
     handleInputChange,
     handleSavePaymentMethod,
@@ -135,7 +134,7 @@ export default function PaymentMethods() {
               type="button"
               variant="primary"
               onClick={handleSavePaymentMethod}
-              loading={isSubmitting}
+              isLoading={isSubmitting}
             >
               {currentPaymentMethod?.id ? 'Guardar cambios' : 'Crear método de pago'}
             </Button>

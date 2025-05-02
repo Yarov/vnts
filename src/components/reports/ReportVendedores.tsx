@@ -1,5 +1,4 @@
 import React from 'react';
-import Card from '../ui/Card';
 import {
   Table,
   TableBody,
@@ -13,15 +12,11 @@ import {
   DollarSign,
   ShoppingCart,
   Wallet,
-  TrendingUp,
   Users,
-  Target,
 } from 'lucide-react';
 import {
   LineChart,
   Line,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   Tooltip,
@@ -51,18 +46,14 @@ interface ReportVendedoresProps {
     products_sold: number;
   }>;
   formatCurrency: (value: number) => string;
-  formatDate: (date: string | Date, format: string) => string;
   isLoading: boolean;
-  periodLabel: string;
 }
 
 const ReportVendedores: React.FC<ReportVendedoresProps> = ({
   commissions,
   ventasPorVendedor,
   formatCurrency,
-  formatDate,
   isLoading,
-  periodLabel,
 }) => {
   // Calcular métricas generales
   const totalComisiones = commissions.reduce((sum, c) => sum + c.commission_amount, 0);

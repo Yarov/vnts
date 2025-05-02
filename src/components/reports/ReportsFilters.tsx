@@ -14,7 +14,6 @@ interface ReportsFiltersProps {
   setSelectedSellerId: (v: string) => void;
   onReset: () => void;
   onExport: () => void;
-  formatDate: (d: Date | string) => string;
 }
 
 const periodOptions = [
@@ -35,7 +34,6 @@ const ReportsFilters: React.FC<ReportsFiltersProps> = ({
   setSelectedSellerId,
   onReset,
   onExport,
-  formatDate,
 }) => {
   return (
     <div className="sticky top-14 z-10 bg-white border-b border-gray-100 mb-6 py-4 px-4 rounded-md shadow-sm">

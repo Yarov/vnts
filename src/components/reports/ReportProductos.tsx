@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -7,13 +6,10 @@ import {
   TableHeader,
   TableRow,
 } from '../ui/Table';
-import Button from '../ui/Button';
-import Input from '../ui/Input';
 import Badge from '../ui/Badge';
-import { formatCurrency, formatDate } from '../../utils/formatters';
-import { useProductReport, ProductStats } from '../../hooks/useProductReport';
-import { Package2, DollarSign, ShoppingCart, BarChart3, Download, RefreshCw, X } from 'lucide-react';
-import { exportProductsToExcel } from '../../utils/exportToExcel';
+import { formatCurrency } from '../../utils/formatters';
+import { useProductReport } from '../../hooks/useProductReport';
+import { Package2, DollarSign, ShoppingCart, BarChart3 } from 'lucide-react';
 import ReportCard from './ReportCard';
 import {
   AreaChart,
@@ -30,50 +26,8 @@ export default function ReportProductos() {
   const {
     products,
     isLoading,
-    error,
-    searchTerm,
-    setSearchTerm,
-    dateFilter,
-    setDateFilter,
-    totals,
-    refreshData
+    totals
   } = useProductReport();
-
-  // Manejar cambios en las fechas
-  const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newStartDate = e.target.value;
-    setDateFilter(prev => ({
-      ...prev,
-      startDate: newStartDate,
-      // Si la fecha final es anterior a la inicial, la actualizamos
-      endDate: prev.endDate && newStartDate > prev.endDate ? newStartDate : prev.endDate
-    }));
-  };
-
-  const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newEndDate = e.target.value;
-    setDateFilter(prev => ({
-      ...prev,
-      endDate: newEndDate,
-      // Si la fecha inicial es posterior a la final, la actualizamos
-      startDate: prev.startDate && newEndDate < prev.startDate ? newEndDate : prev.startDate
-    }));
-  };
-
-  // Limpiar filtros
-  const handleClearFilters = () => {
-    setSearchTerm('');
-    setDateFilter({ startDate: '', endDate: '' });
-  };
-
-  // Exportar a Excel
-  const handleExport = () => {
-    const timestamp = formatDate(new Date(), 'yyyy-MM-dd_HH-mm');
-    const fileName = `productos_${timestamp}.xlsx`;
-    exportProductsToExcel(products, fileName);
-  };
-
-  const hasActiveFilters = searchTerm || dateFilter.startDate || dateFilter.endDate;
 
   // Función para formatear valores en el tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -111,16 +65,16 @@ export default function ReportProductos() {
           icon={ShoppingCart}
           iconColor="text-emerald-600"
           iconBgColor="bg-emerald-50"
-          trend={totals.total_revenue > totals.total_revenue_prev ? { value: 1, isPositive: true } : { value: -1, isPositive: false }}
+          trend={{ value: 1, isPositive: true }}
         />
 
         <ReportCard
           title="Valor del Inventario"
-          value={formatCurrency(totals.total_revenue_prev)}
+          value={formatCurrency(totals.total_revenue)}
           icon={DollarSign}
           iconColor="text-purple-600"
           iconBgColor="bg-purple-50"
-          trend={totals.total_revenue > totals.total_revenue_prev ? { value: 1, isPositive: true } : { value: -1, isPositive: false }}
+          trend={{ value: 1, isPositive: true }}
         />
       </div>
 

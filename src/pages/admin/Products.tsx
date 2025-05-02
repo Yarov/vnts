@@ -32,7 +32,6 @@ export default function Products() {
     currentProduct,
     setCurrentProduct,
     formErrors,
-    setFormErrors,
     isSubmitting,
     handleInputChange,
     handleSaveProduct,
@@ -160,7 +159,7 @@ export default function Products() {
               type="button"
               variant="primary"
               onClick={handleSaveProduct}
-              loading={isSubmitting}
+              isLoading={isSubmitting}
             >
               {currentProduct?.id ? 'Guardar cambios' : 'Crear producto'}
             </Button>

@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -7,13 +6,10 @@ import {
   TableHeader,
   TableRow,
 } from '../ui/Table';
-import Button from '../ui/Button';
-import Input from '../ui/Input';
 import Badge from '../ui/Badge';
 import { formatCurrency, formatDate } from '../../utils/formatters';
-import { useClientReport, ClientStats } from '../../hooks/useClientReport';
-import { Users, DollarSign, ShoppingCart, CreditCard, ChevronDown, ChevronUp, Download, RefreshCw, X } from 'lucide-react';
-import { exportClientsToExcel } from '../../utils/exportToExcel';
+import { useClientReport } from '../../hooks/useClientReport';
+import { Users, DollarSign, ShoppingCart, CreditCard } from 'lucide-react';
 import ReportCard from './ReportCard';
 import {
   AreaChart,
@@ -30,69 +26,8 @@ export default function ReportClientes() {
   const {
     clients,
     isLoading,
-    error,
-    searchTerm,
-    setSearchTerm,
-    dateFilter,
-    setDateFilter,
-    totals,
-    refreshData
+    totals
   } = useClientReport();
-
-  const [expandedClientId, setExpandedClientId] = useState<string | null>(null);
-
-  // Manejar cambios en las fechas
-  const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newStartDate = e.target.value;
-    setDateFilter(prev => ({
-      ...prev,
-      startDate: newStartDate,
-      // Si la fecha final es anterior a la inicial, la actualizamos
-      endDate: prev.endDate && newStartDate > prev.endDate ? newStartDate : prev.endDate
-    }));
-  };
-
-  const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newEndDate = e.target.value;
-    setDateFilter(prev => ({
-      ...prev,
-      endDate: newEndDate,
-      // Si la fecha inicial es posterior a la final, la actualizamos
-      startDate: prev.startDate && newEndDate < prev.startDate ? newEndDate : prev.startDate
-    }));
-  };
-
-  // Limpiar filtros
-  const handleClearFilters = () => {
-    setSearchTerm('');
-    setDateFilter({ startDate: '', endDate: '' });
-  };
-
-  // Exportar a Excel
-  const handleExport = () => {
-    const timestamp = formatDate(new Date(), 'yyyy-MM-dd_HH-mm');
-    const fileName = `clientes_${timestamp}.xlsx`;
-    exportClientsToExcel(clients, fileName);
-  };
-
-  const hasActiveFilters = searchTerm || dateFilter.startDate || dateFilter.endDate;
-
-  // Función para formatear valores en el tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-100">
-          <p className="text-sm font-medium text-gray-600 mb-2">{label}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} className="text-sm" style={{ color: entry.color }}>
-              {entry.name}: {entry.name === 'Ventas' ? formatCurrency(entry.value) : entry.value}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="space-y-8 p-6 bg-gray-50">

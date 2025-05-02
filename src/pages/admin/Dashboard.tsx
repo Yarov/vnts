@@ -136,7 +136,7 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {sellerCommissions.length > 0 ? (
-                  sellerCommissions.map((commission, index) => (
+                  sellerCommissions.map((commission) => (
                     <tr key={commission.seller_id}>
                       <td>{commission.seller_name}</td>
                       <td className="text-right">{useAdminFormatCurrency(commission.total_sales)}</td>

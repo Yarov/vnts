@@ -1,10 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '../types/database.types';
 
-// Estas variables deben ser reemplazadas con tus credenciales reales
-// En producción, deberían estar en un archivo .env
-const SUPABASE_URL = 'https://vdhykkvhmydfrcahwzpq.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkaHlra3ZobXlkZnJjYWh3enBxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4ODI5MzgsImV4cCI6MjA2MTQ1ODkzOH0.bhBbETnmvD8R6Pl466n68qEfTpaoSAIL02DvGT4XuIM';
+// Utilizamos las variables de entorno definidas en .env
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+// Verificar que las variables de entorno estén definidas
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.error(
+    'Error: Las variables de entorno VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY deben estar definidas'
+  );
+}
 
 export const supabase = createClient<Database>(
   SUPABASE_URL,
@@ -49,33 +55,37 @@ export async function validateSellerCode(code: string) {
 
 // Función para obtener las comisiones de un vendedor por periodo
 export async function getSellerCommissions(sellerId: string, startDate?: string, endDate?: string) {
-  const { data, error } = await supabase
-    .rpc('get_seller_commissions', {
-      seller_id: sellerId,
-      start_date: startDate,
-      end_date: endDate
-    });
+  try {
+    const { data, error } = await supabase
+      .rpc('get_seller_commissions', {
+        seller_id: sellerId,
+        start_date: startDate,
+        end_date: endDate
+      });
 
-  if (error) {
+    if (error) throw error;
+
+    return data && data.length > 0 ? data[0] : null;
+  } catch (error) {
     console.error('Error obteniendo comisiones del vendedor:', error);
     return null;
   }
-
-  return data && data.length > 0 ? data[0] : null;
 }
 
 // Función para obtener las comisiones de todos los vendedores por periodo
 export async function getAllSellerCommissions(startDate?: string, endDate?: string) {
-  const { data, error } = await supabase
-    .rpc('get_all_seller_commissions', {
-      start_date: startDate,
-      end_date: endDate
-    });
+  try {
+    const { data, error } = await supabase
+      .rpc('get_all_seller_commissions', {
+        start_date: startDate,
+        end_date: endDate
+      });
 
-  if (error) {
+    if (error) throw error;
+
+    return data || [];
+  } catch (error) {
     console.error('Error obteniendo comisiones de vendedores:', error);
     return [];
   }
-
-  return data || [];
 }

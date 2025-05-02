@@ -2,22 +2,59 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { getTopClients } from '../services/clientService';
-import { formatDate, formatCurrency } from '../utils/formatters';
-import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, differenceInDays, isSameDay, startOfDay, endOfDay, subDays } from 'date-fns';
-import { Sale } from '../types/sales';
+import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, differenceInDays, startOfDay, endOfDay, subDays } from 'date-fns';
 import { Database } from '../types/database.types';
 import { getAllSellerCommissions } from '../services/authService';
 
 type Seller = Database['public']['Tables']['sellers']['Row'];
 
 // Definir tipo auxiliar para productos agrupados
-// (puedes importar Database si lo necesitas, aquí lo dejamos como any para evitar error de tipado)
 type GroupedProduct = {
   id: string;
   name: string;
   quantity: number;
   total: number;
 };
+
+interface SaleItem {
+  id: string;
+  product: {
+    id: string;
+    name: string;
+  };
+  quantity: number;
+  price: number;
+  subtotal: number;
+}
+
+interface DetailedSale {
+  id: string;
+  created_at: string;
+  total: number;
+  seller: {
+    id: string;
+    name: string;
+  };
+  client?: {
+    id: string;
+    name: string;
+  };
+  payment_method: {
+    id: string;
+    name: string;
+  };
+  items: SaleItem[];
+}
+
+interface RawSale {
+  id: string;
+  created_at: string;
+  total: number;
+  seller: any;
+  client?: any;
+  payment_method?: any;
+  items?: any[];
+}
 
 type UseAdminReportsReturn = {
   dateRange: { start: Date; end: Date };
@@ -52,7 +89,7 @@ type UseAdminReportsReturn = {
   handleExport: () => void;
   topClientes: Array<{ id: string; name: string }>;
   totalSales: number;
-  ventas: Sale[];
+  ventas: DetailedSale[];
   commissions: Array<{
     seller_id: string;
     seller_name: string;
@@ -96,7 +133,7 @@ export function useAdminReports(): UseAdminReportsReturn {
   });
   const [topClientes, setTopClientes] = useState<Array<{ id: string; name: string }>>([]);
   const [previousPeriodSales, setPreviousPeriodSales] = useState(0);
-  const [ventas, setVentas] = useState<Sale[]>([]);
+  const [ventas, setVentas] = useState<DetailedSale[]>([]);
 
   useEffect(() => {
     fetchSellers();
@@ -277,7 +314,7 @@ export function useAdminReports(): UseAdminReportsReturn {
             id,
             name
           ),
-          payment_method:payment_methods!sales_payment_method_id_fkey (
+          payment_method:payment_method_id (
             id,
             name
           ),
@@ -299,12 +336,81 @@ export function useAdminReports(): UseAdminReportsReturn {
       if (ventasError) throw ventasError;
 
       // Filtrar por vendedor si es necesario
-      let filteredSales = ventasData || [];
+      let filteredSales = ventasData || [] as RawSale[];
       if (selectedSellerId) {
-        filteredSales = filteredSales.filter(sale => sale.seller?.id === selectedSellerId);
+        filteredSales = filteredSales.filter((sale: RawSale) => {
+          if (!sale.seller || typeof sale.seller !== 'object' || Array.isArray(sale.seller)) {
+            return false;
+          }
+          return sale.seller.id === selectedSellerId;
+        });
       }
 
-      setVentas(filteredSales as Sale[]);
+      // Convertir ventas al formato esperado
+      const typedSales: DetailedSale[] = filteredSales.map((sale: RawSale) => {
+        // Extraer datos del vendedor
+        const sellerData = sale.seller && typeof sale.seller === 'object' && !Array.isArray(sale.seller)
+          ? {
+              id: typeof sale.seller.id === 'string' ? sale.seller.id : '',
+              name: typeof sale.seller.name === 'string' ? sale.seller.name : ''
+            }
+          : { id: '', name: '' };
+
+        // Extraer datos del cliente si existe
+        let clientData = undefined;
+        if (sale.client && typeof sale.client === 'object' && !Array.isArray(sale.client)) {
+          if ('id' in sale.client && 'name' in sale.client) {
+            clientData = {
+              id: typeof sale.client.id === 'string' ? sale.client.id : '',
+              name: typeof sale.client.name === 'string' ? sale.client.name : ''
+            };
+          }
+        }
+
+        // Extraer datos del método de pago si existe
+        let paymentMethodData = undefined;
+        if (sale.payment_method && typeof sale.payment_method === 'object' && !Array.isArray(sale.payment_method)) {
+          if ('id' in sale.payment_method && 'name' in sale.payment_method) {
+            paymentMethodData = {
+              id: typeof sale.payment_method.id === 'string' ? sale.payment_method.id : '',
+              name: typeof sale.payment_method.name === 'string' ? sale.payment_method.name : ''
+            };
+          }
+        }
+
+        // Extraer datos de los items de venta
+        const items = Array.isArray(sale.items) ? sale.items.map(item => {
+          let productData = { id: '', name: '' };
+          if (item.product && typeof item.product === 'object' && !Array.isArray(item.product)) {
+            if ('id' in item.product && 'name' in item.product) {
+              productData = {
+                id: typeof item.product.id === 'string' ? item.product.id : '',
+                name: typeof item.product.name === 'string' ? item.product.name : ''
+              };
+            }
+          }
+
+          return {
+            id: item.id,
+            product: productData,
+            quantity: item.quantity,
+            price: item.price,
+            subtotal: item.subtotal
+          } as SaleItem;
+        }) : [];
+
+        return {
+          id: sale.id,
+          created_at: sale.created_at,
+          total: sale.total,
+          seller: sellerData,
+          client: clientData,
+          payment_method: paymentMethodData || { id: '', name: '' },
+          items: items
+        } as DetailedSale;
+      });
+
+      setVentas(typedSales);
 
       // Consulta resumida de ventas para estadísticas
       const { data: salesData, error: salesError } = await supabase
@@ -385,7 +491,7 @@ export function useAdminReports(): UseAdminReportsReturn {
       // Agrupar ventas por día
       const dailyMap = {} as Record<string, { date: string; total: number; count: number }>;
       (filteredStatsData || []).forEach(sale => {
-        const date = formatDate(new Date(sale.created_at), 'yyyy-MM-dd');
+        const date = new Date(sale.created_at).toISOString().split('T')[0];
         if (!dailyMap[date]) {
           dailyMap[date] = {
             date,
