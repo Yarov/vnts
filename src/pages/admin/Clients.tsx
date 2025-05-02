@@ -4,13 +4,15 @@ import {
   MagnifyingGlassIcon,
   PencilIcon,
   TrashIcon,
-  PhoneIcon
+  PhoneIcon,
+  EllipsisVerticalIcon
 } from '@heroicons/react/24/outline';
 import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
 import Button from '../../components/ui/Button';
 import FormField from '../../components/ui/FormField';
 import Modal from '../../components/ui/Modal';
+import { useState } from 'react';
 
 export default function Clients() {
   const {
@@ -52,7 +54,7 @@ export default function Clients() {
       accessor: (client: any) => {
         const stats = getClientStats(client.id);
         return stats.last_purchase
-          ? new Date(stats.last_purchase).toLocaleDateString()
+          ? new Date(String(stats.last_purchase)).toLocaleDateString()
           : 'Nunca';
       }
     },
@@ -101,25 +103,68 @@ export default function Clients() {
         </div>
       </div>
 
-      <Card>
-        <div className="mb-4">
-          <FormField
-            label="Buscar clientes"
-            placeholder="Buscar por nombre o referencia..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            leftIcon={<MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />}
+      {/* Tabla solo en desktop */}
+      <div className="hidden md:block">
+        <Card>
+          <div className="mb-4">
+            <FormField
+              label="Buscar clientes"
+              placeholder="Buscar por nombre o referencia..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              leftIcon={<MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />}
+            />
+          </div>
+          <Table
+            columns={columns}
+            data={filteredClients}
+            keyExtractor={(item) => item.id}
+            isLoading={loading}
+            emptyMessage="No se encontraron clientes"
           />
-        </div>
+        </Card>
+      </div>
 
-        <Table
-          columns={columns}
-          data={filteredClients}
-          keyExtractor={(item) => item.id}
-          isLoading={loading}
-          emptyMessage="No se encontraron clientes"
+      {/* Cards en mobile */}
+      <div className="block md:hidden space-y-4">
+        <FormField
+          label="Buscar clientes"
+          placeholder="Buscar por nombre o referencia..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          leftIcon={<MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />}
         />
-      </Card>
+        {loading ? (
+          <div className="flex justify-center items-center py-8">
+            <span className="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"></span>
+          </div>
+        ) : filteredClients.length === 0 ? (
+          <Card>
+            <div className="text-center py-8 text-gray-500">No se encontraron clientes</div>
+          </Card>
+        ) : (
+          filteredClients.map((client) => (
+            <Card key={client.id} className="relative p-4 flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <div className="font-bold text-lg text-gray-800">{client.name}</div>
+                  <div className="text-sm text-gray-500">{client.reference || '-'}</div>
+                </div>
+                {/* Menú de acciones */}
+                <MobileClientActions
+                  client={client}
+                  onEdit={() => openClientModal(client)}
+                  onDelete={() => handleDeleteClient(client.id)}
+                />
+              </div>
+              <div className="flex items-center gap-3 mt-2">
+                <span className="text-xs text-gray-500">Compras: {getClientStats(client.id).purchase_count || 0}</span>
+                <span className="text-xs text-gray-500">Última: {getClientStats(client.id).last_purchase ? new Date(String(getClientStats(client.id).last_purchase)).toLocaleDateString() : 'Nunca'}</span>
+              </div>
+            </Card>
+          ))
+        )}
+      </div>
 
       <Modal
         isOpen={isModalOpen}
@@ -167,6 +212,43 @@ export default function Clients() {
           </div>
         </form>
       </Modal>
+    </div>
+  );
+}
+
+// Componente de acciones mobile
+function MobileClientActions({ client, onEdit, onDelete }: {
+  client: any;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        className="p-2 rounded-full hover:bg-gray-100 focus:outline-none"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Acciones"
+      >
+        <EllipsisVerticalIcon className="h-6 w-6 text-gray-500" />
+      </button>
+      {open && (
+        <div className="absolute right-0 z-20 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-100 py-1">
+          <button
+            className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            onClick={() => { setOpen(false); onEdit(); }}
+          >
+            <PencilIcon className="h-4 w-4 mr-2" /> Editar
+          </button>
+          <button
+            className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+            onClick={() => { setOpen(false); onDelete(); }}
+          >
+            <TrashIcon className="h-4 w-4 mr-2" /> Eliminar
+          </button>
+        </div>
+      )}
     </div>
   );
 }

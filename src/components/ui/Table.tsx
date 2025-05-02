@@ -4,6 +4,7 @@ interface Column<T> {
   header: string;
   accessor: keyof T | ((item: T) => ReactNode);
   className?: string;
+  hideOnMobile?: boolean;
 }
 
 interface DataTableProps<T> {
@@ -84,7 +85,7 @@ export function TableRow({ children, onClick }: TableRowProps) {
 
 export function TableHead({ children, className = '' }: TableHeadProps) {
   return (
-    <th className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${className}`}>
+    <th className={`px-2 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${className}`}>
       {children}
     </th>
   );
@@ -92,7 +93,7 @@ export function TableHead({ children, className = '' }: TableHeadProps) {
 
 export function TableCell({ children, className = '', colSpan }: TableCellProps) {
   return (
-    <td className={`px-6 py-4 whitespace-nowrap text-sm text-gray-800 ${className}`} colSpan={colSpan}>
+    <td className={`px-2 py-2 md:px-6 md:py-4 whitespace-nowrap text-sm text-gray-800 ${className}`} colSpan={colSpan}>
       {children}
     </td>
   );
@@ -122,6 +123,9 @@ export default function DataTable<T>({
     }
   };
 
+  // Filtrar columnas visibles en mobile
+  const visibleColumns = columns.filter(col => !col.hideOnMobile);
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-8">
@@ -135,7 +139,12 @@ export default function DataTable<T>({
       <TableHeader>
         <TableRow>
           {columns.map((column, index) => (
-            <TableHead key={index} className={column.className}>
+            <TableHead
+              key={index}
+              className={
+                (column.hideOnMobile ? 'hidden md:table-cell ' : '') + (column.className || '')
+              }
+            >
               {column.header}
             </TableHead>
           ))}
@@ -158,7 +167,9 @@ export default function DataTable<T>({
               {columns.map((column, index) => (
                 <TableCell
                   key={index}
-                  className={column.className}
+                  className={
+                    (column.hideOnMobile ? 'hidden md:table-cell ' : '') + (column.className || '')
+                  }
                 >
                   {renderCell(item, column)}
                 </TableCell>

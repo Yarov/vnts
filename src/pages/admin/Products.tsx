@@ -5,7 +5,8 @@ import {
   PencilIcon,
   TrashIcon,
   CheckCircleIcon,
-  XCircleIcon
+  XCircleIcon,
+  EllipsisVerticalIcon
 } from '@heroicons/react/24/outline';
 import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
@@ -16,6 +17,7 @@ import CheckboxField from '../../components/ui/CheckboxField';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { Database } from '../../types/database.types';
+import { useState } from 'react';
 
 type Product = Database['public']['Tables']['products']['Row'];
 
@@ -55,7 +57,8 @@ export default function Products() {
     },
     {
       header: 'Categoría',
-      accessor: (product: Product) => product.category ?? ''
+      accessor: (product: Product) => product.category ?? '',
+      hideOnMobile: true
     },
     {
       header: 'Estado',
@@ -67,7 +70,8 @@ export default function Products() {
             <><XCircleIcon className="h-5 w-5 mr-1" /> Inactivo</>
           )}
         </span>
-      )
+      ),
+      hideOnMobile: true
     },
     {
       header: 'Acciones',
@@ -99,7 +103,8 @@ export default function Products() {
           </Button>
         </div>
       ),
-      className: 'text-right'
+      className: 'text-right',
+      hideOnMobile: true
     },
   ];
 
@@ -120,25 +125,70 @@ export default function Products() {
         </div>
       </div>
 
-      <Card>
-        <div className="mb-4">
-          <FormField
-            label="Buscar productos"
-            placeholder="Buscar por nombre, categoría o descripción..."
-            value={searchQuery}
-            onChange={(e) => searchProducts(e.target.value)}
-            leftIcon={<MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />}
-          />
-        </div>
+      {/* Tabla solo en desktop */}
+      <div className="hidden md:block">
+        <Card>
+          <div className="mb-4">
+            <FormField
+              label="Buscar productos"
+              placeholder="Buscar por nombre, categoría o descripción..."
+              value={searchQuery}
+              onChange={(e) => searchProducts(e.target.value)}
+              leftIcon={<MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />}
+            />
+          </div>
 
-        <Table
-          columns={columns}
-          data={filteredProducts}
-          keyExtractor={(item) => item.id}
-          isLoading={loading}
-          emptyMessage="No se encontraron productos"
+          <Table
+            columns={columns}
+            data={filteredProducts}
+            keyExtractor={(item) => item.id}
+            isLoading={loading}
+            emptyMessage="No se encontraron productos"
+          />
+        </Card>
+      </div>
+
+      {/* Cards en mobile */}
+      <div className="block md:hidden space-y-4">
+        <FormField
+          label="Buscar productos"
+          placeholder="Buscar por nombre, categoría o descripción..."
+          value={searchQuery}
+          onChange={(e) => searchProducts(e.target.value)}
+          leftIcon={<MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />}
         />
-      </Card>
+        {loading ? (
+          <div className="flex justify-center items-center py-8">
+            <span className="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"></span>
+          </div>
+        ) : filteredProducts.length === 0 ? (
+          <Card>
+            <div className="text-center py-8 text-gray-500">No se encontraron productos</div>
+          </Card>
+        ) : (
+          filteredProducts.map((product) => (
+            <Card key={product.id} className="relative p-4 flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <div className="font-bold text-lg text-gray-800">{product.name}</div>
+                  <div className="text-sm text-gray-500">{product.category}</div>
+                </div>
+                {/* Menú de acciones */}
+                <MobileProductActions
+                  product={product}
+                  onEdit={() => openProductModal(product)}
+                  onDelete={() => confirmDeleteProduct(product.id)}
+                  onToggleStatus={() => toggleProductStatus(product.id, product.active)}
+                />
+              </div>
+              <div className="flex items-center gap-3 mt-2">
+                <span className="text-primary-700 font-semibold text-lg">${product.price.toFixed(2)}</span>
+                <span className={`flex items-center text-xs ${product.active ? 'text-green-600' : 'text-red-600'}`}>{product.active ? <CheckCircleIcon className="h-4 w-4 mr-1" /> : <XCircleIcon className="h-4 w-4 mr-1" />}{product.active ? 'Activo' : 'Inactivo'}</span>
+              </div>
+            </Card>
+          ))
+        )}
+      </div>
 
       {/* Modal de creación/edición de producto */}
       <Modal
@@ -231,6 +281,51 @@ export default function Products() {
         type="danger"
         isLoading={isDeletingProduct}
       />
+    </div>
+  );
+}
+
+// Componente de acciones mobile
+function MobileProductActions({ product, onEdit, onDelete, onToggleStatus }: {
+  product: Product;
+  onEdit: () => void;
+  onDelete: () => void;
+  onToggleStatus: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        className="p-2 rounded-full hover:bg-gray-100 focus:outline-none"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Acciones"
+      >
+        <EllipsisVerticalIcon className="h-6 w-6 text-gray-500" />
+      </button>
+      {open && (
+        <div className="absolute right-0 z-20 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-100 py-1">
+          <button
+            className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            onClick={() => { setOpen(false); onEdit(); }}
+          >
+            <PencilIcon className="h-4 w-4 mr-2" /> Editar
+          </button>
+          <button
+            className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            onClick={() => { setOpen(false); onToggleStatus(); }}
+          >
+            {product.active ? <XCircleIcon className="h-4 w-4 mr-2" /> : <CheckCircleIcon className="h-4 w-4 mr-2" />}
+            {product.active ? 'Desactivar' : 'Activar'}
+          </button>
+          <button
+            className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+            onClick={() => { setOpen(false); onDelete(); }}
+          >
+            <TrashIcon className="h-4 w-4 mr-2" /> Eliminar
+          </button>
+        </div>
+      )}
     </div>
   );
 }

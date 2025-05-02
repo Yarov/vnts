@@ -1,3 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+@media (min-width: 768px) {
+  input, textarea, select {
+  font-size: 16px;
+}
+  input, textarea, select {
+    font-size: inherit;
+  }
+}

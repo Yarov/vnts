@@ -5,7 +5,8 @@ import {
   PencilIcon,
   TrashIcon,
   CheckCircleIcon,
-  XCircleIcon
+  XCircleIcon,
+  EllipsisVerticalIcon
 } from '@heroicons/react/24/outline';
 import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
@@ -15,6 +16,7 @@ import CheckboxField from '../../components/ui/CheckboxField';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { Database } from '../../types/database.types';
+import { useState } from 'react';
 
 type Seller = Database['public']['Tables']['sellers']['Row'];
 
@@ -51,7 +53,8 @@ export default function Sellers() {
         <span className="badge badge-outline font-mono">
           {seller.numeric_code}
         </span>
-      )
+      ),
+      hideOnMobile: true
     },
     {
       header: 'Estado',
@@ -63,11 +66,13 @@ export default function Sellers() {
             <><XCircleIcon className="h-5 w-5 mr-1" /> Inactivo</>
           )}
         </span>
-      )
+      ),
+      hideOnMobile: true
     },
     {
       header: 'Comisión (%)',
-      accessor: (seller: Seller) => seller.commission_percentage
+      accessor: (seller: Seller) => seller.commission_percentage,
+      hideOnMobile: true
     },
     {
       header: 'Acciones',
@@ -99,7 +104,8 @@ export default function Sellers() {
           </Button>
         </div>
       ),
-      className: 'text-right'
+      className: 'text-right',
+      hideOnMobile: true
     },
   ];
 
@@ -120,24 +126,69 @@ export default function Sellers() {
         </div>
       </div>
 
-      <Card>
-        <div className="mb-4">
-          <FormField
-            label="Buscar vendedores"
-            placeholder="Buscar por nombre o código..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            leftIcon={<MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />}
+      {/* Tabla solo en desktop */}
+      <div className="hidden md:block">
+        <Card>
+          <div className="mb-4">
+            <FormField
+              label="Buscar vendedores"
+              placeholder="Buscar por nombre o código..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              leftIcon={<MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />}
+            />
+          </div>
+          <Table
+            columns={columns}
+            data={filteredSellers}
+            keyExtractor={(item) => item.id}
+            isLoading={loading}
+            emptyMessage="No se encontraron vendedores"
           />
-        </div>
-        <Table
-          columns={columns}
-          data={filteredSellers}
-          keyExtractor={(item) => item.id}
-          isLoading={loading}
-          emptyMessage="No se encontraron vendedores"
+        </Card>
+      </div>
+
+      {/* Cards en mobile */}
+      <div className="block md:hidden space-y-4">
+        <FormField
+          label="Buscar vendedores"
+          placeholder="Buscar por nombre o código..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          leftIcon={<MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />}
         />
-      </Card>
+        {loading ? (
+          <div className="flex justify-center items-center py-8">
+            <span className="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"></span>
+          </div>
+        ) : filteredSellers.length === 0 ? (
+          <Card>
+            <div className="text-center py-8 text-gray-500">No se encontraron vendedores</div>
+          </Card>
+        ) : (
+          filteredSellers.map((seller) => (
+            <Card key={seller.id} className="relative p-4 flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <div className="font-bold text-lg text-gray-800">{seller.name}</div>
+                  <div className="text-sm text-gray-500">Código: {seller.numeric_code}</div>
+                </div>
+                {/* Menú de acciones */}
+                <MobileSellerActions
+                  seller={seller}
+                  onEdit={() => openSellerModal(seller)}
+                  onDelete={() => confirmDeleteSeller(seller.id)}
+                  onToggleStatus={() => toggleSellerStatus(seller.id, seller.active)}
+                />
+              </div>
+              <div className="flex items-center gap-3 mt-2">
+                <span className={`flex items-center text-xs ${seller.active ? 'text-green-600' : 'text-red-600'}`}>{seller.active ? <CheckCircleIcon className="h-4 w-4 mr-1" /> : <XCircleIcon className="h-4 w-4 mr-1" />}{seller.active ? 'Activo' : 'Inactivo'}</span>
+                <span className="text-xs text-gray-500">Comisión: {seller.commission_percentage}%</span>
+              </div>
+            </Card>
+          ))
+        )}
+      </div>
 
       {/* Modal de creación/edición de vendedor */}
       <Modal
@@ -217,6 +268,51 @@ export default function Sellers() {
         type="danger"
         isLoading={isDeletingSeller}
       />
+    </div>
+  );
+}
+
+// Componente de acciones mobile
+function MobileSellerActions({ seller, onEdit, onDelete, onToggleStatus }: {
+  seller: Seller;
+  onEdit: () => void;
+  onDelete: () => void;
+  onToggleStatus: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        className="p-2 rounded-full hover:bg-gray-100 focus:outline-none"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Acciones"
+      >
+        <EllipsisVerticalIcon className="h-6 w-6 text-gray-500" />
+      </button>
+      {open && (
+        <div className="absolute right-0 z-20 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-100 py-1">
+          <button
+            className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            onClick={() => { setOpen(false); onEdit(); }}
+          >
+            <PencilIcon className="h-4 w-4 mr-2" /> Editar
+          </button>
+          <button
+            className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            onClick={() => { setOpen(false); onToggleStatus(); }}
+          >
+            {seller.active ? <XCircleIcon className="h-4 w-4 mr-2" /> : <CheckCircleIcon className="h-4 w-4 mr-2" />}
+            {seller.active ? 'Desactivar' : 'Activar'}
+          </button>
+          <button
+            className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+            onClick={() => { setOpen(false); onDelete(); }}
+          >
+            <TrashIcon className="h-4 w-4 mr-2" /> Eliminar
+          </button>
+        </div>
+      )}
     </div>
   );
 }
