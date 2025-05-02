@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   KeyIcon,
   ArrowRightIcon,
@@ -154,7 +154,7 @@ export default function SellerLoginPage({ onLogin }: SellerLoginPageProps) {
               </button>
             </div>
           </form>
-
+{/*
           <div className="mt-10">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -173,7 +173,7 @@ export default function SellerLoginPage({ onLogin }: SellerLoginPageProps) {
                 Acceder como administrador
               </Link>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

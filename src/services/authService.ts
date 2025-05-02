@@ -93,7 +93,8 @@ export const loginAsSeller = async (code: string): Promise<User | null> => {
       return {
         id: seller.id,
         email: '', // Los vendedores no tienen email
-        role: 'seller'
+        role: 'seller',
+        name: seller.name
       };
     }
 

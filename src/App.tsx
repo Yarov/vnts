@@ -131,7 +131,7 @@ function App() {
         </Route>
 
         {/* Default Redirect */}
-        <Route path="/" element={<Navigate to={isAuthenticated ? (isAdmin ? "/admin" : "/seller") : "/login"} />} />
+        <Route path="/" element={<Navigate to={isAuthenticated ? (isAdmin ? "/admin" : "/seller") : "/seller-login"} />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </ThemeProvider>

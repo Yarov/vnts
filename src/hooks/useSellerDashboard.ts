@@ -19,6 +19,7 @@ export function useSellerDashboard() {
     commissionPercentage: 0
   });
   const [paymentMethodsData, setPaymentMethodsData] = useState<any[]>([]);
+  const [name, setName] = useState(user?.name || '');
 
   // Día actual formateado
   const currentDay = formatDayMonthLong(new Date());
@@ -29,6 +30,27 @@ export function useSellerDashboard() {
     }
     // eslint-disable-next-line
   }, [user]);
+
+  // Refresca el nombre del vendedor desde la DB
+  useEffect(() => {
+    const fetchSellerName = async () => {
+      if (user?.id) {
+        const { data } = await supabase
+          .from('sellers')
+          .select('name')
+          .eq('id', user.id)
+          .single();
+        if (data?.name && data.name !== user.name) {
+          setName(data.name);
+          setUser({ ...user, name: data.name });
+        } else if (data?.name) {
+          setName(data.name);
+        }
+      }
+    };
+    fetchSellerName();
+    // eslint-disable-next-line
+  }, [user?.id]);
 
   const goToNewSale = () => {
     navigate('/seller/new-sale');
@@ -154,6 +176,7 @@ export function useSellerDashboard() {
     isLoading,
     currentDay,
     goToNewSale,
-    handleLogout
+    handleLogout,
+    name: name || 'Vendedor',
   };
 }
