@@ -14,15 +14,15 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
-  
+
   // Usar el hook de autenticación
   const { loading, error, signInAsAdmin } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const success = await signInAsAdmin(email, password);
-    
+
     if (success) {
       navigate('/admin');
     }
@@ -31,7 +31,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Lado izquierdo - Banner */}
-      <div className="hidden lg:flex lg:flex-1 lg:flex-col justify-center items-center bg-gradient-to-br from-purple-700 to-purple-900 text-white p-12">
+      <div className="hidden lg:flex lg:flex-1 lg:flex-col justify-center items-center bg-gradient-to-br from-primary-600 to-primary-900 text-white p-12">
         <div className="w-full max-w-md mx-auto">
           <div className="mb-8">
             <div className="bg-white/10 p-3 rounded-full w-16 h-16 flex items-center justify-center mb-6">
@@ -133,7 +133,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
+                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[var(--primary-color)] hover:bg-[var(--primary-hover)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)] transition-colors"
               >
                 {loading ? (
                   <span className="flex items-center">
@@ -166,7 +166,7 @@ export default function LoginPage() {
             <div className="mt-6">
               <Link
                 to="/seller-login"
-                className="w-full flex justify-center items-center py-3 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
+                className="w-full flex justify-center items-center py-3 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary-color)] transition-colors"
               >
                 Acceder como vendedor
               </Link>

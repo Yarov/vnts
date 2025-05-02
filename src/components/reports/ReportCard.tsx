@@ -21,8 +21,8 @@ const ReportCard: React.FC<ReportCardProps> = ({
   value,
   subtitle,
   icon: Icon,
-  iconColor = 'text-blue-600',
-  iconBgColor = 'bg-blue-50',
+  iconColor = 'text-primary-500',
+  iconBgColor = 'bg-primary-50',
   trend,
   className = '',
 }) => {

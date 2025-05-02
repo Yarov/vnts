@@ -41,12 +41,12 @@ export default function NewSale() {
             id={`product-${product.id}`}
             onClick={() => selectProduct(product)}
             className={`p-2 border rounded-lg flex flex-col h-24 transition-colors ${selectedProduct?.id === product.id
-                ? 'border-primary-300 bg-primary-50 shadow-sm'
+                ? 'border-[var(--primary-color)] bg-[var(--primary-50)] shadow-sm'
                 : 'border-gray-200 hover:bg-gray-50'
               }`}
           >
             <span className="font-medium text-sm line-clamp-2">{product.name}</span>
-            <span className="text-primary-700 font-bold mt-1">{formatCurrency(product.price)}</span>
+            <span className="text-[var(--primary-color)] font-bold mt-1">{formatCurrency(product.price)}</span>
             <span className="text-xs text-gray-500 mt-auto">{product.category}</span>
           </button>
         ))}
@@ -122,13 +122,13 @@ export default function NewSale() {
 
             {/* Mostrar producto seleccionado */}
             {selectedProduct && (
-              <div className="mb-4 p-3 bg-primary-50 border border-primary-200 rounded-lg">
+              <div className="mb-4 p-3 bg-[var(--primary-50)] border border-[var(--primary-200)] rounded-lg">
                 <div className="flex justify-between">
                   <div>
                     <p className="font-medium text-gray-800">{selectedProduct.name}</p>
                     <p className="text-sm text-gray-500">{selectedProduct.category || 'Sin categoría'}</p>
                   </div>
-                  <div className="font-bold text-primary-700 text-lg">
+                  <div className="font-bold text-[var(--primary-color)] text-lg">
                     {formatCurrency(selectedProduct.price)}
                   </div>
                 </div>
@@ -149,7 +149,7 @@ export default function NewSale() {
                     key={category}
                     className={`px-3 py-1 text-sm font-medium rounded-full ${
                       selectedCategory === category
-                      ? 'bg-primary-100 text-primary-800'
+                      ? 'bg-[var(--primary-50)] text-[var(--primary-color)]'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                     onClick={() => setSelectedCategory(category)}
@@ -180,14 +180,14 @@ export default function NewSale() {
                   key={method.id}
                   className={`flex items-center px-3 py-2 border rounded-md transition-colors ${
                     selectedPaymentMethodId === method.id
-                    ? 'bg-primary-50 border-primary-300 text-primary-700'
+                    ? 'bg-[var(--primary-50)] border-[var(--primary-color)] text-[var(--primary-color)]'
                     : 'border-gray-300 hover:bg-gray-50 text-gray-700'
                   }`}
                   onClick={() => setSelectedPaymentMethodId(method.id)}
                 >
                   <div className={`p-1 rounded-full mr-2 ${
                     selectedPaymentMethodId === method.id
-                    ? 'bg-primary-100'
+                    ? 'bg-[var(--primary-50)]'
                     : 'bg-gray-100'
                   }`}>
                     {renderPaymentMethodIconUI(method.id)}
@@ -229,7 +229,7 @@ export default function NewSale() {
                 variant="primary"
                 className="w-full sm:w-auto px-10 py-3 text-base font-medium"
                 onClick={handleSale}
-                loading={isLoading}
+                isLoading={isLoading}
                 disabled={!selectedProduct}
               >
                 Completar Venta

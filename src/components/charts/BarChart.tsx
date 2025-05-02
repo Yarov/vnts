@@ -67,14 +67,13 @@ export default function BarChart({
 
   // Colores primarios para las barras (puedes ajustar según tu paleta)
   const PRIMARY_COLORS = [
-    'rgba(124, 58, 237, 0.85)', // primary-600
-    'rgba(99, 102, 241, 0.85)', // indigo-500
+    'var(--primary-color)', // primary color
     'rgba(59, 130, 246, 0.85)', // blue-500
     'rgba(16, 185, 129, 0.85)', // emerald-500
-    'rgba(251, 191, 36, 0.85)', // yellow-400
-    'rgba(239, 68, 68, 0.85)',  // red-500
+    'rgba(245, 158, 11, 0.85)', // amber-500
+    'rgba(239, 68, 68, 0.85)', // red-500
     'rgba(236, 72, 153, 0.85)', // pink-500
-    'rgba(34, 197, 94, 0.85)',  // green-500
+    'rgba(168, 85, 247, 0.85)', // purple-500
   ];
 
   // Datos formateados para Chart.js
@@ -84,7 +83,7 @@ export default function BarChart({
       label: dataset.label,
       data: dataset.data,
       backgroundColor: dataset.backgroundColor || chartLabels.map((_, i) => PRIMARY_COLORS[i % PRIMARY_COLORS.length]),
-      borderColor: dataset.borderColor || 'rgba(124, 58, 237, 1)',
+      borderColor: dataset.borderColor || 'var(--primary-600)',
       borderWidth: dataset.borderWidth || 0,
       borderRadius: 10,
       maxBarThickness: 40,
@@ -113,14 +112,14 @@ export default function BarChart({
           size: 18,
           weight: 'bold',
         },
-        color: '#7c3aed',
+        color: 'var(--primary-color)',
         padding: { top: 8, bottom: 16 },
       },
       tooltip: {
         backgroundColor: 'rgba(255,255,255,0.97)',
-        titleColor: '#7c3aed',
+        titleColor: 'var(--primary-color)',
         bodyColor: '#1e293b',
-        borderColor: '#7c3aed',
+        borderColor: 'var(--primary-color)',
         borderWidth: 1.5,
         padding: 14,
         boxWidth: 12,
@@ -157,10 +156,10 @@ export default function BarChart({
             size: 13,
             weight: 'bold'
           },
-          color: '#7c3aed',
+          color: 'var(--primary-color)',
         },
         ticks: {
-          color: '#6366f1',
+          color: 'var(--primary-color)',
           font: { size: 13 },
           callback: function(value) {
             return new Intl.NumberFormat('es-MX', {

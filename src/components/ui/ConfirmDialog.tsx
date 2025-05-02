@@ -24,7 +24,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   onConfirm,
   title,
   message,
-  confirmText = 'Confirmar',
+  confirmText = 'Aceptar',
   cancelText = 'Cancelar',
   type = 'danger',
   isLoading = false
@@ -65,7 +65,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             {cancelText}
           </Button>
           <Button
-            variant={type === 'danger' ? 'error' : 'primary'}
+            variant={type === 'danger' ? 'danger' : 'primary'}
             onClick={onConfirm}
             isLoading={isLoading}
           >

@@ -209,7 +209,7 @@ export default function ClientDetailModal({ client, isOpen, onClose }: ClientDet
           {/* Lista de compras */}
           {isLoading ? (
             <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-r-transparent"></div>
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary-200 border-t-primary-600"></div>
               <p className="mt-4 text-slate-600">Cargando historial de compras...</p>
             </div>
           ) : filteredSales.length === 0 ? (

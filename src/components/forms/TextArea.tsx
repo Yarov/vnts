@@ -8,14 +8,14 @@ interface TextAreaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 }
 
 const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
-  ({ 
-    label, 
-    error, 
-    helperText, 
-    className = '', 
+  ({
+    label,
+    error,
+    helperText,
+    className = '',
     wrapperClassName = '',
     rows = 3,
-    ...props 
+    ...props
   }, ref) => {
     return (
       <div className={`${wrapperClassName}`}>
@@ -30,7 +30,7 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
             rows={rows}
             className={`
               block w-full px-3 py-2 rounded-md shadow-sm text-sm text-gray-900
-              border ${error ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-purple-500 focus:border-purple-500'}
+              border ${error ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-[var(--primary-color)] focus:border-[var(--primary-color)]'}
               placeholder:text-gray-400
               focus:outline-none focus:ring-2
               disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed

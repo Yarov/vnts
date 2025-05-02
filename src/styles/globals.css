@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-color: #3B82F6;
+  --primary-hover: color-mix(in srgb, var(--primary-color) 85%, black);
+  --primary-light: color-mix(in srgb, var(--primary-color) 15%, white);
+}
+
+@layer base {
+  body {
+    @apply bg-gray-50;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-[var(--primary-color)] hover:bg-[var(--primary-hover)] text-white;
+  }
+
+  .text-primary {
+    @apply text-[var(--primary-color)];
+  }
+
+  .border-primary {
+    @apply border-[var(--primary-color)];
+  }
+
+  .bg-primary {
+    @apply bg-[var(--primary-color)];
+  }
+
+  .hover:bg-primary:hover {
+    @apply hover:bg-[var(--primary-color)];
+  }
+
+  .bg-primary-light {
+    @apply bg-[var(--primary-light)];
+  }
+}

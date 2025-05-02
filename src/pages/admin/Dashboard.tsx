@@ -109,19 +109,19 @@ export default function Dashboard() {
         title="Comisiones del Día"
         className="mb-6"
         actions={
-          <button className="text-xs text-purple-600 hover:text-purple-800 flex items-center">
+          <button className="text-xs text-primary-600 hover:text-primary-800 flex items-center">
             Ver histórico <ArrowRightIcon className="h-3 w-3 ml-1" />
           </button>
         }
       >
         <div className="flex items-center space-x-2 mb-4">
-          <CurrencyDollarIcon className="h-5 w-5 text-purple-600" />
+          <CurrencyDollarIcon className="h-5 w-5 text-primary-600" />
           <span className="text-sm font-medium text-gray-700">Comisiones ganadas por vendedores hoy</span>
         </div>
 
         {isLoading ? (
           <div className="flex justify-center py-8">
-            <span className="h-8 w-8 animate-spin rounded-full border-4 border-purple-200 border-t-purple-600"></span>
+            <span className="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"></span>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -180,14 +180,14 @@ export default function Dashboard() {
           title="Productos Más Vendidos"
           className="h-full"
           actions={
-            <button className="text-xs text-purple-600 hover:text-purple-800 flex items-center">
+            <button className="text-xs text-primary-600 hover:text-primary-800 flex items-center">
               Ver todos <ArrowRightIcon className="h-3 w-3 ml-1" />
             </button>
           }
         >
           {isLoading ? (
             <div className="flex justify-center py-8">
-              <span className="h-8 w-8 animate-spin rounded-full border-4 border-purple-200 border-t-purple-600"></span>
+              <span className="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"></span>
             </div>
           ) : (
             <Table
@@ -207,19 +207,19 @@ export default function Dashboard() {
         title="Clientes Frecuentes"
         className="mb-6"
         actions={
-          <button className="text-xs text-purple-600 hover:text-purple-800 flex items-center">
+          <button className="text-xs text-primary-600 hover:text-primary-800 flex items-center">
             Ver todos <ArrowRightIcon className="h-3 w-3 ml-1" />
           </button>
         }
       >
         <div className="flex items-center space-x-2 mb-4">
-          <UserGroupIcon className="h-5 w-5 text-purple-600" />
+          <UserGroupIcon className="h-5 w-5 text-primary-600" />
           <span className="text-sm font-medium text-gray-700">Top clientes por frecuencia de compra</span>
         </div>
 
         {isLoading ? (
           <div className="flex justify-center py-8">
-            <span className="h-8 w-8 animate-spin rounded-full border-4 border-purple-200 border-t-purple-600"></span>
+            <span className="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"></span>
           </div>
         ) : (
           <Table

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  EllipsisHorizontalIcon, 
-  CreditCardIcon, 
+import {
+  EllipsisHorizontalIcon,
+  CreditCardIcon,
   BanknotesIcon,
   ArrowPathIcon,
   CurrencyDollarIcon
@@ -21,9 +21,9 @@ type PaymentsByMethodCardProps = {
   maxVisibleItems?: number;
 };
 
-const PaymentsByMethodCard: React.FC<PaymentsByMethodCardProps> = ({ 
-  title, 
-  methods, 
+const PaymentsByMethodCard: React.FC<PaymentsByMethodCardProps> = ({
+  title,
+  methods,
   className = '',
   maxVisibleItems = 4
 }) => {
@@ -49,33 +49,33 @@ const PaymentsByMethodCard: React.FC<PaymentsByMethodCardProps> = ({
       }
     });
   }, [methods, sortBy]);
-  
+
   // Determinar si hay que mostrar el "Ver más"
   const hasMoreItems = sortedMethods.length > maxVisibleItems;
-  
+
   // Estado para controlar si se muestran todos los métodos
   const [showAllMethods, setShowAllMethods] = useState(false);
-  
+
   // Métodos a mostrar basados en el estado
-  const visibleMethods = showAllMethods ? sortedMethods : 
-                         hasMoreItems ? sortedMethods.slice(0, maxVisibleItems) : 
+  const visibleMethods = showAllMethods ? sortedMethods :
+                         hasMoreItems ? sortedMethods.slice(0, maxVisibleItems) :
                          sortedMethods;
 
   return (
     <div className={`bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden ${className}`}>
       <div className="px-6 py-4 flex items-center justify-between border-b border-gray-100">
         <h3 className="text-sm font-medium text-gray-500">{title}</h3>
-        
+
         {sortedMethods.length > 1 && (
           <div className="flex items-center space-x-2">
-            <button 
-              onClick={() => setSortBy('amount')} 
+            <button
+              onClick={() => setSortBy('amount')}
               className={`text-xs px-2 py-1 rounded ${sortBy === 'amount' ? 'bg-primary-100 text-primary-600' : 'bg-gray-50 text-gray-500'}`}
             >
               Por monto
             </button>
-            <button 
-              onClick={() => setSortBy('count')} 
+            <button
+              onClick={() => setSortBy('count')}
               className={`text-xs px-2 py-1 rounded ${sortBy === 'count' ? 'bg-primary-100 text-primary-600' : 'bg-gray-50 text-gray-500'}`}
             >
               Por cantidad
@@ -89,24 +89,24 @@ const PaymentsByMethodCard: React.FC<PaymentsByMethodCardProps> = ({
           <div className="divide-y divide-gray-100">
             {visibleMethods.map((method) => {
               // Determine icon based on payment method name
-              let icon = <CreditCardIcon className="h-5 w-5 text-blue-500" />;
-              let bgColor = "bg-blue-50";
+              let icon = <CreditCardIcon className="h-5 w-5 text-[var(--primary-color)]" />;
+              let bgColor = "bg-primary-50";
               const methodName = method.name.toLowerCase();
-              
+
               if (methodName.includes('efectivo')) {
                 icon = <BanknotesIcon className="h-5 w-5 text-green-500" />;
                 bgColor = "bg-green-50";
               } else if (methodName.includes('transferencia')) {
-                icon = <ArrowPathIcon className="h-5 w-5 text-purple-500" />;
-                bgColor = "bg-purple-50";
+                icon = <ArrowPathIcon className="h-5 w-5 text-[var(--primary-color)]" />;
+                bgColor = "bg-primary-50";
               } else if (methodName.includes('débito')) {
-                icon = <CreditCardIcon className="h-5 w-5 text-indigo-500" />;
-                bgColor = "bg-indigo-50";
+                icon = <CreditCardIcon className="h-5 w-5 text-[var(--primary-color)]" />;
+                bgColor = "bg-primary-50";
               } else if (methodName.includes('crédito')) {
-                icon = <CreditCardIcon className="h-5 w-5 text-blue-600" />;
-                bgColor = "bg-blue-50";
+                icon = <CreditCardIcon className="h-5 w-5 text-[var(--primary-color)]" />;
+                bgColor = "bg-primary-50";
               }
-              
+
               return (
                 <div key={method.id} className="flex items-center justify-between py-3">
                   <div className="flex items-center">
@@ -122,11 +122,11 @@ const PaymentsByMethodCard: React.FC<PaymentsByMethodCardProps> = ({
                 </div>
               );
             })}
-            
+
             {hasMoreItems && (
               <div className="py-2 text-center">
-                <button 
-                  onClick={() => setShowAllMethods(!showAllMethods)} 
+                <button
+                  onClick={() => setShowAllMethods(!showAllMethods)}
                   className="text-xs text-primary-600 hover:text-primary-800 font-medium"
                 >
                   {showAllMethods ? 'Mostrar menos' : `Ver todos (${sortedMethods.length})`}
@@ -143,7 +143,7 @@ const PaymentsByMethodCard: React.FC<PaymentsByMethodCardProps> = ({
           </div>
         )}
       </div>
-      
+
       {/* Footer with total */}
       {sortedMethods.length > 0 && (
         <div className="px-5 py-3 bg-gray-50 border-t border-gray-100">

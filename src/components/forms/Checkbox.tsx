@@ -8,13 +8,13 @@ interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'typ
 }
 
 const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
-  ({ 
-    label, 
-    error, 
-    helperText, 
-    className = '', 
+  ({
+    label,
+    error,
+    helperText,
+    className = '',
     wrapperClassName = '',
-    ...props 
+    ...props
   }, ref) => {
     return (
       <div className={`flex items-start ${wrapperClassName}`}>
@@ -23,9 +23,9 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
             ref={ref}
             type="checkbox"
             className={`
-              h-4 w-4 rounded 
-              text-purple-600 
-              focus:ring-purple-500 
+              h-4 w-4 rounded
+              text-[var(--primary-color)]
+              focus:ring-[var(--primary-color)]
               border-gray-300
               transition-colors
               ${className}

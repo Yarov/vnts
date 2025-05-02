@@ -19,12 +19,13 @@ import {
 } from '@heroicons/react/24/outline';
 
 const navigation = [
-  { name: 'Dashboard', href: '/admin', icon: HomeIcon },
+  { name: 'Panel', href: '/admin', icon: HomeIcon },
+  { name: 'Reportes', href: '/admin/reports', icon: ChartBarIcon },
   { name: 'Productos', href: '/admin/products', icon: ShoppingBagIcon },
   { name: 'Vendedores', href: '/admin/sellers', icon: UserGroupIcon },
   { name: 'Clientes', href: '/admin/clients', icon: UserIcon },
-  { name: 'Reportes', href: '/admin/reports', icon: ChartBarIcon },
   { name: 'Métodos de Pago', href: '/admin/payment-methods', icon: CreditCardIcon },
+  { name: 'Configuración', href: '/admin/settings', icon: Cog6ToothIcon },
 ];
 
 export default function AdminLayout() {
@@ -60,7 +61,7 @@ export default function AdminLayout() {
         ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
       `}>
         <div className="absolute inset-0 bg-gray-600 opacity-75" onClick={() => setSidebarOpen(false)}></div>
-        
+
         <nav className="relative flex flex-col w-64 max-w-xs h-full bg-white shadow-xl">
           <div className="absolute top-0 right-0 p-1 -mr-14">
             <button
@@ -70,13 +71,13 @@ export default function AdminLayout() {
               <XMarkIcon className="h-6 w-6 text-white" />
             </button>
           </div>
-          
+
           <div className="flex-1 overflow-y-auto">
             <div className="py-4 px-4 border-b border-gray-200">
               <h1 className="text-lg font-bold text-gray-800">VNTS Admin</h1>
               <p className="text-xs text-gray-500">Control de Ingresos</p>
             </div>
-            
+
             <div className="py-4">
               <div className="px-4 mb-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                 MENÚ PRINCIPAL
@@ -101,7 +102,7 @@ export default function AdminLayout() {
               </nav>
             </div>
           </div>
-          
+
           <div className="p-4 border-t border-gray-200">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -132,7 +133,7 @@ export default function AdminLayout() {
               <h1 className="text-lg font-bold text-gray-800">VNTS Admin</h1>
               <p className="text-xs text-gray-500">Control de Ingresos</p>
             </div>
-            
+
             <div className="flex-1 flex flex-col overflow-y-auto py-4">
               <div className="px-4 mb-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                 MENÚ PRINCIPAL
@@ -155,7 +156,7 @@ export default function AdminLayout() {
                 ))}
               </nav>
             </div>
-            
+
             <div className="p-4 border-t border-gray-200">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
@@ -178,7 +179,7 @@ export default function AdminLayout() {
           </div>
         </div>
       </div>
-      
+
       {/* Contenido principal */}
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Navbar superior */}
@@ -189,19 +190,22 @@ export default function AdminLayout() {
           >
             <Bars3Icon className="h-6 w-6" />
           </button>
-          
+
           <div className="flex-1 px-4 flex justify-between">
             <div className="flex-1 flex items-center">
               <h1 className="text-xl font-semibold text-gray-800">{getCurrentPageTitle()}</h1>
             </div>
             <div className="ml-4 flex items-center md:ml-6">
-              <button className="p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none">
+              <button
+                className="p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none"
+                onClick={() => navigate('/admin/settings')}
+              >
                 <Cog6ToothIcon className="h-6 w-6" />
               </button>
             </div>
           </div>
         </div>
-        
+
         {/* Contenido de página */}
         <main className="flex-1 relative overflow-y-auto focus:outline-none p-6 bg-gray-50">
           <Outlet />
