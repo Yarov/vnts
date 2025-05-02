@@ -1,225 +1,38 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  CheckCircleIcon,
-  BanknotesIcon,
-  CreditCardIcon,
-  DocumentTextIcon,
-  UserIcon
-} from '@heroicons/react/24/outline';
-import { useAtom } from 'jotai';
-import { userAtom } from '../../store/auth';
+import { CheckCircleIcon, BanknotesIcon, CreditCardIcon, DocumentTextIcon, UserIcon } from '@heroicons/react/24/outline';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import { Input, TextArea } from '../../components/forms';
-import { Database } from '../../types/database.types';
-import { getAllProducts } from '../../services/productService';
-import { getAllPaymentMethods } from '../../services/paymentMethodService';
-import { getOrCreateClient } from '../../services/clientService';
-import { processSale } from '../../services/salesService';
-
-type Product = Database['public']['Tables']['products']['Row'];
-type PaymentMethod = Database['public']['Tables']['payment_methods']['Row'];
-
+import { useSellerNewSale } from '../../hooks/useSellerNewSale';
+import { formatCurrency } from '../../utils/formatters';
 
 export default function NewSale() {
-  const [user] = useAtom(userAtom);
-  let navigate = useNavigate();
-  // Estado para cliente
-  const [clientReference, setClientReference] = useState('');
-
-  // Estado para productos
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categorizedProducts, setCategorizedProducts] = useState<{[key: string]: Product[]}>({});
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-
-  // Estado para pagos
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState('');
-  const [notes, setNotes] = useState('');
-
-  // Estado general
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
-
-  // Referencias
-  const clientReferenceRef = useRef<HTMLInputElement>(null);
-
-  // Cargar datos iniciales
-  useEffect(() => {
-    fetchProducts();
-    fetchPaymentMethods();
-
-    // Enfocar en la referencia del cliente al cargar
-    if (clientReferenceRef.current) {
-      clientReferenceRef.current.focus();
-    }
-  }, []);
-
-  // Organizar productos por categoría cuando se cargan
-  useEffect(() => {
-    const categorized: {[key: string]: Product[]} = {};
-
-    // Agrupar por categoría
-    products.forEach(product => {
-      const category = product.category || 'Sin categoría';
-
-      if (!categorized[category]) {
-        categorized[category] = [];
-      }
-
-      categorized[category].push(product);
-    });
-
-    setCategorizedProducts(categorized);
-
-    // Seleccionar la primera categoría si hay alguna
-    const categories = Object.keys(categorized);
-    if (categories.length > 0 && !selectedCategory) {
-      setSelectedCategory(categories[0]);
-    }
-  }, [products]);
-
-  // Obtener productos
-  const fetchProducts = async () => {
-    try {
-      const data = await getAllProducts(true);
-      setProducts(data);
-    } catch (error) {
-      console.error('Error al cargar productos:', error);
-    }
-  };
-
-  // Obtener métodos de pago
-  const fetchPaymentMethods = async () => {
-    try {
-      const data = await getAllPaymentMethods(true);
-      setPaymentMethods(data);
-
-      // Establecer el primer método como predeterminado
-      if (data.length > 0) {
-        setSelectedPaymentMethodId(data[0].id);
-      }
-    } catch (error) {
-      console.error('Error al cargar métodos de pago:', error);
-    }
-  };
-
-  // Seleccionar producto
-  const selectProduct = (product: Product) => {
-    setSelectedProduct(product);
-
-    // Proporcionar feedback visual
-    const productElement = document.getElementById(`product-${product.id}`);
-    if (productElement) {
-      productElement.classList.add('bg-primary-50');
-      setTimeout(() => {
-        productElement.classList.remove('bg-primary-50');
-      }, 300);
-    }
-  };
-
-  // Calcular total de venta
-  const calculateTotal = () => {
-    if (!selectedProduct) return 0;
-    return Number(selectedProduct.price);
-  };
-
-  // Validar formulario
-  const validateForm = () => {
-    const newErrors: {[key: string]: string} = {};
-
-    if (!selectedProduct) {
-      newErrors.product = 'Debes seleccionar un producto';
-    }
-
-    if (!selectedPaymentMethodId) {
-      newErrors.paymentMethod = 'Selecciona un método de pago';
-    }
-
-    if (!clientReference.trim()) {
-      newErrors.clientReference = 'La referencia del cliente es requerida';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Procesar venta
-  const handleSale = async () => {
-    if (!validateForm()) return;
-
-    setIsLoading(true);
-
-    try {
-      // Crear/buscar cliente
-      const client = await getOrCreateClient(clientReference.trim());
-      if (!client) throw new Error('Error al obtener o crear el cliente');
-
-      // Preparar datos de la venta
-      if (selectedProduct) {
-        const saleData = {
-          seller_id: user?.id || '',
-          client_id: client.id,
-          payment_method_id: selectedPaymentMethodId,
-          total: calculateTotal(),
-          notes: notes.trim() || null,
-          items: [
-            {
-              product_id: selectedProduct.id,
-              product_name: selectedProduct.name,
-              quantity: 1,
-              price: Number(selectedProduct.price),
-              subtotal: Number(selectedProduct.price)
-            }
-          ],
-          client_name: client.name
-        };
-
-        // Usar el servicio para procesar la venta
-        const result = await processSale(saleData);
-        
-        if (result) {
-          // Mostrar éxito y resetear
-          setIsSuccess(true);
-          setTimeout(() => {
-            resetSale();
-            navigate('/seller');
-          }, 2000);
-        } else {
-          throw new Error('Error al procesar venta');
-        }
-      }
-    } catch (error) {
-      console.error('Error al procesar venta:', error);
-      alert('Error al procesar venta. Por favor, intenta de nuevo.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Resetear venta para empezar una nueva
-  const resetSale = () => {
-    setIsSuccess(false);
-    setSelectedProduct(null);
-    setClientReference('');
-    setNotes('');
-    // Mantener el método de pago seleccionado para la próxima venta
-
-    // Enfocar en la referencia del cliente
-    if (clientReferenceRef.current) {
-      clientReferenceRef.current.focus();
-    }
-  };
+  const {
+    clientReference,
+    setClientReference,
+    clientReferenceRef,
+    categorizedProducts,
+    selectedCategory,
+    setSelectedCategory,
+    selectedProduct,
+    selectProduct,
+    paymentMethods,
+    selectedPaymentMethodId,
+    setSelectedPaymentMethodId,
+    notes,
+    setNotes,
+    isLoading,
+    isSuccess,
+    errors,
+    calculateTotal,
+    handleSale,
+    resetSale,
+    renderPaymentMethodIcon
+  } = useSellerNewSale();
 
   // Renderizar productos por categoría
   const renderProductsByCategory = () => {
     if (!selectedCategory) return null;
-
     const productsInCategory = categorizedProducts[selectedCategory] || [];
-
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
         {productsInCategory.map(product => (
@@ -233,7 +46,7 @@ export default function NewSale() {
               }`}
           >
             <span className="font-medium text-sm line-clamp-2">{product.name}</span>
-            <span className="text-primary-700 font-bold mt-1">${Number(product.price).toFixed(2)}</span>
+            <span className="text-primary-700 font-bold mt-1">{formatCurrency(product.price)}</span>
             <span className="text-xs text-gray-500 mt-auto">{product.category}</span>
           </button>
         ))}
@@ -242,17 +55,15 @@ export default function NewSale() {
   };
 
   // Renderizar el método de pago con su ícono correspondiente
-  const renderPaymentMethodIcon = (methodId: string) => {
-    const methodName = paymentMethods.find(m => m.id === methodId)?.name.toLowerCase() || '';
-
-    if (methodName.includes('efectivo')) {
+  const renderPaymentMethodIconUI = (methodId: string) => {
+    const iconType = renderPaymentMethodIcon(methodId);
+    if (iconType === 'cash') {
       return <BanknotesIcon className="h-6 w-6" />;
-    } else if (methodName.includes('tarjeta')) {
+    } else if (iconType === 'card') {
       return <CreditCardIcon className="h-6 w-6" />;
-    } else if (methodName.includes('transfer')) {
+    } else if (iconType === 'transfer') {
       return <DocumentTextIcon className="h-6 w-6" />;
     }
-
     return <CreditCardIcon className="h-6 w-6" />;
   };
 
@@ -318,7 +129,7 @@ export default function NewSale() {
                     <p className="text-sm text-gray-500">{selectedProduct.category || 'Sin categoría'}</p>
                   </div>
                   <div className="font-bold text-primary-700 text-lg">
-                    ${Number(selectedProduct.price).toFixed(2)}
+                    {formatCurrency(selectedProduct.price)}
                   </div>
                 </div>
               </div>
@@ -379,7 +190,7 @@ export default function NewSale() {
                     ? 'bg-primary-100'
                     : 'bg-gray-100'
                   }`}>
-                    {renderPaymentMethodIcon(method.id)}
+                    {renderPaymentMethodIconUI(method.id)}
                   </div>
                   <span className="font-medium">{method.name}</span>
                 </button>
@@ -403,14 +214,14 @@ export default function NewSale() {
           <div className="border-t border-gray-200 pt-6 mt-2 flex flex-col sm:flex-row justify-between items-center">
             <div className="mb-4 sm:mb-0">
               <span className="text-gray-600 text-lg">Total:</span>
-              <span className="ml-2 text-3xl font-bold text-gray-900">${calculateTotal().toFixed(2)}</span>
+              <span className="ml-2 text-3xl font-bold text-gray-900">{formatCurrency(calculateTotal())}</span>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <Button
                 variant="outline"
                 className="w-full sm:w-auto px-10 py-3 text-base font-medium"
-                onClick={() => navigate('/seller')}
+                onClick={() => window.location.href = '/seller'}
               >
                 Cancelar Venta
               </Button>

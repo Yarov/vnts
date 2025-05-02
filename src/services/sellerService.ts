@@ -14,15 +14,15 @@ export const getAllSellers = async (activeOnly: boolean = true): Promise<Seller[
       .from('sellers')
       .select('*')
       .order('name');
-      
+
     if (activeOnly) {
       query = query.eq('active', true);
     }
-    
+
     const { data, error } = await query;
-    
+
     if (error) throw error;
-    
+
     return data || [];
   } catch (error) {
     console.error('Error al obtener vendedores:', error);
@@ -42,9 +42,9 @@ export const getSellerById = async (id: string): Promise<Seller | null> => {
       .select('*')
       .eq('id', id)
       .single();
-    
+
     if (error) throw error;
-    
+
     return data;
   } catch (error) {
     console.error(`Error al obtener vendedor con ID ${id}:`, error);
@@ -65,9 +65,9 @@ export const getSellerByCode = async (code: string): Promise<Seller | null> => {
       .eq('numeric_code', code)
       .eq('active', true)
       .single();
-    
+
     if (error) throw error;
-    
+
     return data;
   } catch (error) {
     console.error(`Error al obtener vendedor con código ${code}:`, error);
@@ -93,19 +93,19 @@ export const createSeller = async (
       numeric_code: numericCode,
       active: true
     };
-    
+
     if (commissionPercentage !== undefined) {
       newSeller.commission_percentage = commissionPercentage;
     }
-    
+
     const { data, error } = await supabase
       .from('sellers')
       .insert([newSeller])
       .select()
       .single();
-    
+
     if (error) throw error;
-    
+
     return data;
   } catch (error) {
     console.error('Error al crear vendedor:', error);
@@ -130,9 +130,9 @@ export const updateSeller = async (
       .eq('id', id)
       .select()
       .single();
-    
+
     if (error) throw error;
-    
+
     return data;
   } catch (error) {
     console.error(`Error al actualizar vendedor con ID ${id}:`, error);
@@ -157,9 +157,9 @@ export const toggleSellerActive = async (
       .eq('id', id)
       .select()
       .single();
-    
+
     if (error) throw error;
-    
+
     return data;
   } catch (error) {
     console.error(`Error al cambiar estado del vendedor con ID ${id}:`, error);
@@ -184,9 +184,9 @@ export const updateSellerCommission = async (
       .eq('id', id)
       .select()
       .single();
-    
+
     if (error) throw error;
-    
+
     return data;
   } catch (error) {
     console.error(`Error al actualizar comisión del vendedor con ID ${id}:`, error);
@@ -209,15 +209,15 @@ export const isNumericCodeInUse = async (
       .from('sellers')
       .select('id')
       .eq('numeric_code', code);
-    
+
     if (excludeId) {
       query = query.neq('id', excludeId);
     }
-    
+
     const { data, error } = await query;
-    
+
     if (error) throw error;
-    
+
     return (data || []).length > 0;
   } catch (error) {
     console.error(`Error al verificar uso del código ${code}:`, error);

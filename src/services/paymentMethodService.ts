@@ -14,15 +14,15 @@ export const getAllPaymentMethods = async (activeOnly: boolean = true): Promise<
       .from('payment_methods')
       .select('*')
       .order('name');
-      
+
     if (activeOnly) {
       query = query.eq('active', true);
     }
-    
+
     const { data, error } = await query;
-    
+
     if (error) throw error;
-    
+
     return data || [];
   } catch (error) {
     console.error('Error al obtener métodos de pago:', error);
@@ -42,9 +42,9 @@ export const getPaymentMethodById = async (id: string): Promise<PaymentMethod | 
       .select('*')
       .eq('id', id)
       .single();
-    
+
     if (error) throw error;
-    
+
     return data;
   } catch (error) {
     console.error(`Error al obtener método de pago con ID ${id}:`, error);
@@ -64,9 +64,9 @@ export const createPaymentMethod = async (name: string): Promise<PaymentMethod |
       .insert([{ name, active: true }])
       .select()
       .single();
-    
+
     if (error) throw error;
-    
+
     return data;
   } catch (error) {
     console.error('Error al crear método de pago:', error);
@@ -91,9 +91,9 @@ export const updatePaymentMethod = async (
       .eq('id', id)
       .select()
       .single();
-    
+
     if (error) throw error;
-    
+
     return data;
   } catch (error) {
     console.error(`Error al actualizar método de pago con ID ${id}:`, error);
@@ -118,9 +118,9 @@ export const togglePaymentMethodActive = async (
       .eq('id', id)
       .select()
       .single();
-    
+
     if (error) throw error;
-    
+
     return data;
   } catch (error) {
     console.error(`Error al cambiar estado del método de pago con ID ${id}:`, error);

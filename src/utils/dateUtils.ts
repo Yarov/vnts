@@ -45,11 +45,11 @@ export const getPastDays = (days: number): Array<{
   formattedDate: string;
 }> => {
   const now = new Date();
-  
+
   return Array.from({ length: days }, (_, i) => {
     const date = new Date(now);
     date.setDate(date.getDate() - (days - 1 - i));
-    
+
     return {
       date,
       dateStr: format(date, 'yyyy-MM-dd'),
@@ -79,7 +79,7 @@ export const getTodayRange = () => {
   const today = startOfDay(new Date());
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
-  
+
   return {
     start: today.toISOString(),
     end: tomorrow.toISOString()

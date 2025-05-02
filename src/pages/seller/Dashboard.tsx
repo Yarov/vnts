@@ -1,179 +1,26 @@
-import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
-import { useNavigate } from 'react-router-dom';
-import {
-  CurrencyDollarIcon,
-  ShoppingCartIcon,
-  ReceiptPercentIcon,
-  CalendarIcon,
-  ArrowRightOnRectangleIcon,
-} from '@heroicons/react/24/outline';
-import { useAtom } from 'jotai';
-import { userAtom } from '../../store/auth';
-import { supabase } from '../../lib/supabase';
+import { useSellerDashboard } from '../../hooks/useSellerDashboard';
+import { CurrencyDollarIcon, ShoppingCartIcon, ReceiptPercentIcon, CalendarIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import StatsCard from '../../components/dashboard/StatsCard';
 import PaymentsByMethodCard from '../../components/seller/PaymentsByMethodCard';
-
-// Formatear número como moneda
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: 'MXN'
-  }).format(value);
-};
+import { formatCurrency } from '../../utils/formatters';
 
 export default function SellerDashboard() {
-  const [user, setUser] = useAtom(userAtom);
-  const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
-  const [salesSummary, setSalesSummary] = useState({
-    todaySalesCount: 0,
-    todaySalesAmount: 0,
-    weekSalesCount: 0,
-    weekSalesAmount: 0,
-    dailyChange: { value: 0, isPositive: true },
-    commission: 0,
-    commissionPercentage: 0
-  });
-  const [paymentMethodsData, setPaymentMethodsData] = useState<any[]>([]);
+  const {
+    salesSummary,
+    paymentMethodsData,
+    isLoading,
+    currentDay,
+    goToNewSale,
+    handleLogout
+  } = useSellerDashboard();
 
-  // Obtener el día actual formateado
-  const currentDay = format(new Date(), "EEEE d 'de' MMMM", { locale: es });
-
-  useEffect(() => {
-    if (user?.id) {
-      fetchDashboardData();
-    }
-  }, [user]);
-
-  // Función para ir a la página de nueva venta
-  const goToNewSale = () => {
-    navigate('/seller/new-sale');
-  };
-
-  // Función para cerrar sesión
-  const handleLogout = () => {
-    setUser(null);
-    navigate('/seller-login');
-  };
-
-  // Función para obtener datos del dashboard
-  const fetchDashboardData = async () => {
-    setIsLoading(true);
-
-    try {
-      // Fecha de hoy
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const todayStr = today.toISOString();
-
-      // Fecha de ayer
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString();
-
-      // Fecha de hace una semana
-      const lastWeek = new Date(today);
-      lastWeek.setDate(lastWeek.getDate() - 7);
-      const lastWeekStr = lastWeek.toISOString();
-
-      // Obtener ventas del vendedor
-      const { data: salesData, error: salesError } = await supabase
-        .from('sales')
-        .select('id, total, created_at')
-        .eq('seller_id', user?.id)
-        .order('created_at', { ascending: false });
-
-      if (salesError) throw salesError;
-
-      // Filtrar ventas por fecha
-      const todaySales = (salesData || []).filter(sale => sale.created_at >= todayStr);
-      const yesterdaySales = (salesData || []).filter(sale => sale.created_at >= yesterdayStr && sale.created_at < todayStr);
-      const weekSales = (salesData || []).filter(sale => sale.created_at >= lastWeekStr);
-
-      // Calcular resúmenes
-      const todaySalesAmount = todaySales.reduce((sum, sale) => sum + parseFloat(sale.total), 0);
-      const yesterdaySalesAmount = yesterdaySales.reduce((sum, sale) => sum + parseFloat(sale.total), 0);
-      const weekSalesAmount = weekSales.reduce((sum, sale) => sum + parseFloat(sale.total), 0);
-
-      // Calcular cambio porcentual
-      const dailyChange = yesterdaySalesAmount === 0
-        ? { value: 100, isPositive: true }
-        : {
-            value: Math.round((todaySalesAmount - yesterdaySalesAmount) / yesterdaySalesAmount * 100 * 10) / 10,
-            isPositive: todaySalesAmount >= yesterdaySalesAmount
-          };
-
-      // Obtener la información del vendedor para saber su porcentaje de comisión
-      const { data: sellerData, error: sellerError } = await supabase
-        .from('sellers')
-        .select('commission_percentage')
-        .eq('id', user?.id)
-        .single();
-
-      if (sellerError) throw sellerError;
-
-      // Calcular la comisión del día
-      const commissionPercentage = sellerData?.commission_percentage || 0;
-      const todayCommission = todaySalesAmount * (commissionPercentage / 100);
-
-      // Obtener ventas por método de pago para hoy
-      const { data: paymentMethodsResult, error: paymentMethodsError } = await supabase
-        .from('sales')
-        .select(`
-          id, total, created_at,
-          payment_method:payment_method_id(id, name)
-        `)
-        .eq('seller_id', user?.id)
-        .gte('created_at', todayStr);
-
-      if (paymentMethodsError) throw paymentMethodsError;
-
-      // Procesar datos de métodos de pago
-      const methodsMap = new Map();
-
-      paymentMethodsResult?.forEach(sale => {
-        const methodId = sale.payment_method.id;
-        const methodName = sale.payment_method.name;
-        const total = parseFloat(sale.total);
-
-        if (methodsMap.has(methodId)) {
-          const current = methodsMap.get(methodId);
-          methodsMap.set(methodId, {
-            ...current,
-            total: current.total + total,
-            count: current.count + 1
-          });
-        } else {
-          methodsMap.set(methodId, {
-            id: methodId,
-            name: methodName,
-            total: total,
-            count: 1
-          });
-        }
-      });
-
-      setPaymentMethodsData(Array.from(methodsMap.values()));
-
-
-      setSalesSummary({
-        todaySalesCount: todaySales.length,
-        todaySalesAmount,
-        weekSalesCount: weekSales.length,
-        weekSalesAmount,
-        dailyChange,
-        commission: todayCommission,
-        commissionPercentage
-      });
-
-    } catch (error) {
-      console.error('Error al cargar datos del dashboard:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <span className="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"></span>
+      </div>
+    );
+  }
 
   return (
     <div>

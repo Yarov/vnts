@@ -1,25 +1,22 @@
 import { useAdminClients } from '../../hooks/useAdminClients';
-import { useState, useEffect } from 'react';
 import {
   PlusIcon,
   MagnifyingGlassIcon,
   PencilIcon,
   TrashIcon,
-  PhoneIcon,
-  EnvelopeIcon
+  PhoneIcon
 } from '@heroicons/react/24/outline';
-import { supabase } from '../../lib/supabase';
 import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
 import Button from '../../components/ui/Button';
 import FormField from '../../components/ui/FormField';
 import { Database } from '../../types/database.types';
+import Modal from '../../components/ui/Modal';
 
 type Client = Database['public']['Tables']['clients']['Row'];
 
 export default function Clients() {
   const {
-    clients,
     filteredClients,
     loading,
     searchTerm,
@@ -28,9 +25,7 @@ export default function Clients() {
     openClientModal,
     closeModal,
     currentClient,
-    setCurrentClient,
     formErrors,
-    setFormErrors,
     isSubmitting,
     handleInputChange,
     handleSaveClient,
@@ -129,68 +124,52 @@ export default function Clients() {
         />
       </Card>
 
-      {/* Modal de creación/edición de cliente */}
-      {isModalOpen && (
-        <div className="fixed inset-0 overflow-y-auto z-50">
-          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            {/* Backdrop */}
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-
-            {/* Modal */}
-            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-              <div>
-                <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                  {currentClient?.id ? 'Editar Cliente' : 'Crear Nuevo Cliente'}
-                </h3>
-
-                <form onSubmit={handleSaveClient}>
-                  <FormField
-                    label="Nombre del cliente"
-                    name="name"
-                    value={currentClient?.name || ''}
-                    onChange={handleInputChange}
-                    error={formErrors.name}
-                    required
-                  />
-
-                  <FormField
-                    label="Referencia (teléfono, email, etc.)"
-                    name="reference"
-                    value={currentClient?.reference || ''}
-                    onChange={handleInputChange}
-                    leftIcon={
-                      <div className="flex">
-                        <PhoneIcon className="h-5 w-5 text-gray-400 mr-1" />
-                      </div>
-                    }
-                  />
-
-                  <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-                    <Button
-                      type="submit"
-                      variant="primary"
-                      loading={isSubmitting}
-                      className="sm:col-start-2"
-                    >
-                      {currentClient?.id ? 'Guardar cambios' : 'Crear cliente'}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={closeModal}
-                      className="mt-3 sm:mt-0 sm:col-start-1"
-                    >
-                      Cancelar
-                    </Button>
-                  </div>
-                </form>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        title={currentClient?.id ? 'Editar Cliente' : 'Crear Nuevo Cliente'}
+        size="md"
+      >
+        <form onSubmit={handleSaveClient}>
+          <FormField
+            label="Nombre del cliente"
+            name="name"
+            value={currentClient?.name || ''}
+            onChange={handleInputChange}
+            error={formErrors.name}
+            required
+          />
+          <FormField
+            label="Referencia (teléfono, email, etc.)"
+            name="reference"
+            value={currentClient?.reference || ''}
+            onChange={handleInputChange}
+            leftIcon={
+              <div className="flex">
+                <PhoneIcon className="h-5 w-5 text-gray-400 mr-1" />
               </div>
-            </div>
+            }
+          />
+          <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+            <Button
+              type="submit"
+              variant="primary"
+              loading={isSubmitting}
+              className="sm:col-start-2"
+            >
+              {currentClient?.id ? 'Guardar cambios' : 'Crear cliente'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={closeModal}
+              className="mt-3 sm:mt-0 sm:col-start-1"
+            >
+              Cancelar
+            </Button>
           </div>
-        </div>
-      )}
+        </form>
+      </Modal>
     </div>
   );
 }

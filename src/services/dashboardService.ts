@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { getTodayRange } from '../utils/dateUtils';
+import { getTodayRange, getCurrentDate, getYesterdayDate, getWeekStartDate, getPreviousWeekStartDate } from '../utils/dateUtils';
 import { getAllSellerCommissions } from './authService';
 import { getTopProducts } from './productService';
 import { getTopClients } from './clientService';
@@ -149,25 +149,25 @@ export const getDashboardData = async () => {
   try {
     // Obtener resumen de ventas
     const salesSummary = await getSalesSummary();
-    
+
     // Obtener productos más vendidos
     const topProducts = await getTopProducts(5);
-    
+
     // Obtener ventas por vendedor
     const sellerSales = await getSellerSales();
-    
+
     // Obtener comisiones de vendedores para hoy
     const { start: todayStart, end: todayEnd } = getTodayRange();
     const sellerCommissions = await getAllSellerCommissions(todayStart, todayEnd);
-    
+
     // Obtener clientes frecuentes
     const topClients = await getTopClients(5);
-    
+
     // Obtener datos para gráfico de líneas (ventas diarias)
     const { data: salesData } = await supabase
       .from('sales')
       .select('total, created_at');
-    
+
     const past14Days = Array.from({ length: 14 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - (13 - i));
@@ -178,17 +178,17 @@ export const getDashboardData = async () => {
         sales: 0
       };
     });
-    
+
     // Agrupar ventas por día
     (salesData || []).forEach(sale => {
       const saleDate = new Date(sale.created_at).toISOString().split('T')[0];
       const dayData = past14Days.find(d => d.dateStr === saleDate);
-      
+
       if (dayData) {
         dayData.sales += parseFloat(sale.total);
       }
     });
-    
+
     return {
       salesSummary,
       topProducts,

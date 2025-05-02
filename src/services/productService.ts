@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase';
-import { Product } from '../store/products';
 import { Database } from '../types/database.types';
+type Product = Database['public']['Tables']['products']['Row'];
 
 /**
  * Obtiene todos los productos

@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 
 interface Column<T> {
   header: string;
@@ -6,7 +6,7 @@ interface Column<T> {
   className?: string;
 }
 
-interface TableProps<T> {
+interface DataTableProps<T> {
   columns: Column<T>[];
   data: T[];
   keyExtractor: (item: T) => string;
@@ -16,7 +16,90 @@ interface TableProps<T> {
   className?: string;
 }
 
-export default function Table<T>({
+interface TableProps {
+  children?: ReactNode;
+  className?: string;
+}
+
+interface TableHeaderProps {
+  children?: ReactNode;
+}
+
+interface TableBodyProps {
+  children?: ReactNode;
+}
+
+interface TableRowProps {
+  children?: ReactNode;
+  onClick?: () => void;
+}
+
+interface TableHeadProps {
+  children?: ReactNode;
+  className?: string;
+}
+
+interface TableCellProps {
+  children?: ReactNode;
+  className?: string;
+  colSpan?: number;
+}
+
+export function Table({ children, className = '' }: TableProps) {
+  return (
+    <div className={`overflow-x-auto ${className}`}>
+      <table className="min-w-full divide-y divide-gray-200">
+        {children}
+      </table>
+    </div>
+  );
+}
+
+export function TableHeader({ children }: TableHeaderProps) {
+  return (
+    <thead className="bg-gray-50">
+      {children}
+    </thead>
+  );
+}
+
+export function TableBody({ children }: TableBodyProps) {
+  return (
+    <tbody className="bg-white divide-y divide-gray-200">
+      {children}
+    </tbody>
+  );
+}
+
+export function TableRow({ children, onClick }: TableRowProps) {
+  return (
+    <tr
+      className={`${onClick ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+      onClick={onClick}
+    >
+      {children}
+    </tr>
+  );
+}
+
+export function TableHead({ children, className = '' }: TableHeadProps) {
+  return (
+    <th className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${className}`}>
+      {children}
+    </th>
+  );
+}
+
+export function TableCell({ children, className = '', colSpan }: TableCellProps) {
+  return (
+    <td className={`px-6 py-4 whitespace-nowrap text-sm text-gray-800 ${className}`} colSpan={colSpan}>
+      {children}
+    </td>
+  );
+}
+
+// DataTable component for backward compatibility
+export default function DataTable<T>({
   columns,
   data,
   keyExtractor,
@@ -24,13 +107,13 @@ export default function Table<T>({
   isLoading = false,
   onRowClick,
   className = '',
-}: TableProps<T>) {
+}: DataTableProps<T>) {
   const renderCell = (item: T, column: Column<T>) => {
     try {
       if (typeof column.accessor === 'function') {
         return column.accessor(item);
       }
-      
+
       const value = item[column.accessor as keyof T];
       return value as ReactNode;
     } catch (error) {
@@ -48,54 +131,48 @@ export default function Table<T>({
   }
 
   return (
-    <div className={`overflow-x-auto ${className}`}>
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            {columns.map((column, index) => (
-              <th
-                key={index}
-                className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${column.className || ''}`}
-              >
-                {column.header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {data.length > 0 ? (
-            data.map((item) => (
-              <tr 
-                key={(() => {
-                  try {
-                    return keyExtractor(item);
-                  } catch (error) {
-                    console.error('Error extracting key:', error);
-                    return Math.random().toString(36).substring(2, 9); // Fallback to random ID
-                  }
-                })()} 
-                className={`${onRowClick ? 'cursor-pointer hover:bg-gray-50' : ''}`}
-                onClick={onRowClick ? () => onRowClick(item) : undefined}
-              >
-                {columns.map((column, index) => (
-                  <td 
-                    key={index} 
-                    className={`px-6 py-4 whitespace-nowrap text-sm text-gray-800 ${column.className || ''}`}
-                  >
-                    {renderCell(item, column)}
-                  </td>
-                ))}
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={columns.length} className="px-6 py-4 text-center text-sm text-gray-500">
-                {emptyMessage}
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
+    <Table className={className}>
+      <TableHeader>
+        <TableRow>
+          {columns.map((column, index) => (
+            <TableHead key={index} className={column.className}>
+              {column.header}
+            </TableHead>
+          ))}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {data.length > 0 ? (
+          data.map((item) => (
+            <TableRow
+              key={(() => {
+                try {
+                  return keyExtractor(item);
+                } catch (error) {
+                  console.error('Error extracting key:', error);
+                  return Math.random().toString(36).substring(2, 9); // Fallback to random ID
+                }
+              })()}
+              onClick={onRowClick ? () => onRowClick(item) : undefined}
+            >
+              {columns.map((column, index) => (
+                <TableCell
+                  key={index}
+                  className={column.className}
+                >
+                  {renderCell(item, column)}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))
+        ) : (
+          <TableRow>
+            <TableCell colSpan={columns.length} className="text-center">
+              {emptyMessage}
+            </TableCell>
+          </TableRow>
+        )}
+      </TableBody>
+    </Table>
   );
 }

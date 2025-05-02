@@ -1,199 +1,37 @@
-import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
-import {
-  FunnelIcon,
-  CalendarIcon,
-  EyeIcon
-} from '@heroicons/react/24/outline';
-import { useAtom } from 'jotai';
-import { userAtom } from '../../store/auth';
-import { supabase } from '../../lib/supabase';
+import { EyeIcon } from '@heroicons/react/24/outline';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Table from '../../components/ui/Table';
-import FormField from '../../components/ui/FormField';
-import Select from '../../components/ui/Select';
-import { Database } from '../../types/database.types';
-
-type Sale = Database['public']['Tables']['sales']['Row'];
-type PaymentMethod = Database['public']['Tables']['payment_methods']['Row'];
-type Client = Database['public']['Tables']['clients']['Row'];
-type SaleItem = Database['public']['Tables']['sale_items']['Row'] & {
-  product_name?: string;
-};
-
-interface SaleWithDetails extends Sale {
-  client_name?: string;
-  payment_method_name?: string;
-  formatted_date?: string;
-  items?: SaleItem[];
-}
-
-// Formatear número como moneda
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: 'MXN'
-  }).format(value);
-};
+import { useSellerSalesHistory, SaleWithDetails, SaleItem } from '../../hooks/useSellerSalesHistory';
+import { formatCurrency } from '../../utils/formatters';
 
 export default function SalesHistory() {
-  const [user] = useAtom(userAtom);
-  const [sales, setSales] = useState<SaleWithDetails[]>([]);
-  const [filteredSales, setFilteredSales] = useState<SaleWithDetails[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [currentSale, setCurrentSale] = useState<SaleWithDetails | null>(null);
+  const {
+    filteredSales,
+    isLoading,
+    isDetailModalOpen,
+    setIsDetailModalOpen,
+    currentSale,
+    currentDay,
+    viewSaleDetails
+  } = useSellerSalesHistory();
 
-
-
-  // Obtener el día actual formateado
-  const currentDay = format(new Date(), "EEEE d 'de' MMMM", { locale: es });
-
-  useEffect(() => {
-    if (user?.id) {
-      fetchSalesHistory();
-      fetchPaymentMethods();
-      fetchClients();
-    }
-  }, [user]);
-
-
-
-  // Función para obtener historial de ventas
-  const fetchSalesHistory = async () => {
-    setIsLoading(true);
-
-    try {
-      // Obtener ventas del vendedor
-      const { data: salesData, error: salesError } = await supabase
-        .from('sales')
-        .select('id, total, created_at, payment_method_id, client_id, notes')
-        .eq('seller_id', user?.id)
-        .order('created_at', { ascending: false });
-
-      if (salesError) throw salesError;
-
-      // Obtener relaciones
-      const clientIds = [...new Set((salesData || []).map(s => s.client_id).filter(Boolean))];
-      const paymentMethodIds = [...new Set((salesData || []).map(s => s.payment_method_id))];
-
-      const [clientsResponse, paymentMethodsResponse] = await Promise.all([
-        supabase.from('clients').select('id, name').in('id', clientIds),
-        supabase.from('payment_methods').select('id, name').in('id', paymentMethodIds)
-      ]);
-
-      const clientsMap = (clientsResponse.data || []).reduce((acc, client) => {
-        acc[client.id] = client.name;
-        return acc;
-      }, {});
-
-      const paymentMethodsMap = (paymentMethodsResponse.data || []).reduce((acc, pm) => {
-        acc[pm.id] = pm.name;
-        return acc;
-      }, {});
-
-      // Formatear ventas
-      const formattedSales = (salesData || []).map(sale => ({
-        ...sale,
-        client_name: sale.client_id ? clientsMap[sale.client_id] : 'Sin cliente',
-        payment_method_name: paymentMethodsMap[sale.payment_method_id] || 'Desconocido',
-        formatted_date: format(new Date(sale.created_at), 'dd/MM/yyyy HH:mm'),
-      }));
-
-      setSales(formattedSales);
-      setFilteredSales(formattedSales);
-    } catch (error) {
-      console.error('Error al cargar historial de ventas:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Obtener métodos de pago para filtro
-  const fetchPaymentMethods = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('payment_methods')
-        .select('*')
-        .order('name');
-
-      if (error) throw error;
-      setPaymentMethods(data || []);
-    } catch (error) {
-      console.error('Error al cargar métodos de pago:', error);
-    }
-  };
-
-  // Obtener clientes para filtro
-  const fetchClients = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('clients')
-        .select('*')
-        .order('name');
-
-      if (error) throw error;
-      setClients(data || []);
-    } catch (error) {
-      console.error('Error al cargar clientes:', error);
-    }
-  };
-
-
-
-  // Ver detalles de una venta
-  const viewSaleDetails = async (sale: SaleWithDetails) => {
-    setCurrentSale(sale);
-
-    try {
-      // Obtener items de la venta
-      const { data: itemsData, error: itemsError } = await supabase
-        .from('sale_items')
-        .select(`
-          id, quantity, price, subtotal, product_id,
-          products(name)
-        `)
-        .eq('sale_id', sale.id);
-
-      if (itemsError) throw itemsError;
-
-      // Formatear items
-      const formattedItems = (itemsData || []).map(item => ({
-        ...item,
-        product_name: item.products?.name || 'Producto desconocido',
-      }));
-
-      // Actualizar venta actual con sus items
-      setCurrentSale({
-        ...sale,
-        items: formattedItems,
-      });
-    } catch (error) {
-      console.error('Error al cargar detalles de venta:', error);
-    } finally {
-      setIsDetailModalOpen(true);
-    }
-  };
-
-  // Columnas para tabla de ventas
   const salesColumns = [
     {
       header: 'Fecha',
-      accessor: 'formatted_date',
+      accessor: (sale: SaleWithDetails) => sale.formatted_date || '',
     },
     {
       header: 'Cliente',
-      accessor: 'client_name',
+      accessor: (sale: SaleWithDetails) => sale.client_name || '',
     },
     {
       header: 'Método de pago',
-      accessor: 'payment_method_name',
+      accessor: (sale: SaleWithDetails) => sale.payment_method_name || '',
     },
     {
       header: 'Total',
-      accessor: (sale: SaleWithDetails) => formatCurrency(parseFloat(sale.total)),
+      accessor: (sale: SaleWithDetails) => formatCurrency(parseFloat(String(sale.total))),
       className: 'text-right'
     },
     {
@@ -212,29 +50,27 @@ export default function SalesHistory() {
     },
   ];
 
-  // Columnas para tabla de items de venta
   const saleItemsColumns = [
     {
       header: 'Producto',
-      accessor: 'product_name',
+      accessor: (item: SaleItem) => item.product_name || '',
     },
     {
       header: 'Cantidad',
-      accessor: 'quantity',
+      accessor: (item: SaleItem) => item.quantity,
       className: 'text-center'
     },
     {
       header: 'Precio',
-      accessor: (item: SaleItem) => formatCurrency(parseFloat(item.price)),
+      accessor: (item: SaleItem) => formatCurrency(parseFloat(String(item.price))),
       className: 'text-right'
     },
     {
       header: 'Subtotal',
-      accessor: (item: SaleItem) => formatCurrency(parseFloat(item.subtotal)),
+      accessor: (item: SaleItem) => formatCurrency(parseFloat(String(item.subtotal))),
       className: 'text-right'
     },
   ];
-
 
   return (
     <div>
@@ -298,7 +134,7 @@ export default function SalesHistory() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Total</p>
-                    <p className="font-medium">{formatCurrency(parseFloat(currentSale.total))}</p>
+                    <p className="font-medium">{formatCurrency(parseFloat(String(currentSale.total)))}</p>
                   </div>
                   {currentSale.notes && (
                     <div className="col-span-2">

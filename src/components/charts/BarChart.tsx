@@ -58,18 +58,47 @@ export default function BarChart({
   const useNewApi = !!data;
   const chartLabels = useNewApi ? data?.labels : propLabels;
   const chartDatasets = useNewApi ? data?.datasets : propDatasets;
-  
+
   // Si no hay datos, devolver un div vacío
   if (!chartLabels || !chartDatasets || chartLabels.length === 0) {
     console.warn('BarChart: Missing or empty data');
     return <div className={className}></div>;
   }
+
+  // Colores primarios para las barras (puedes ajustar según tu paleta)
+  const PRIMARY_COLORS = [
+    'rgba(124, 58, 237, 0.85)', // primary-600
+    'rgba(99, 102, 241, 0.85)', // indigo-500
+    'rgba(59, 130, 246, 0.85)', // blue-500
+    'rgba(16, 185, 129, 0.85)', // emerald-500
+    'rgba(251, 191, 36, 0.85)', // yellow-400
+    'rgba(239, 68, 68, 0.85)',  // red-500
+    'rgba(236, 72, 153, 0.85)', // pink-500
+    'rgba(34, 197, 94, 0.85)',  // green-500
+  ];
+
+  // Datos formateados para Chart.js
+  const chartData = {
+    labels: chartLabels,
+    datasets: chartDatasets.map((dataset, idx) => ({
+      label: dataset.label,
+      data: dataset.data,
+      backgroundColor: dataset.backgroundColor || chartLabels.map((_, i) => PRIMARY_COLORS[i % PRIMARY_COLORS.length]),
+      borderColor: dataset.borderColor || 'rgba(124, 58, 237, 1)',
+      borderWidth: dataset.borderWidth || 0,
+      borderRadius: 10,
+      maxBarThickness: 40,
+      minBarLength: 2,
+    })),
+  };
+
   // Configuración de opciones
   const defaultOptions: ChartOptions<'bar'> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
+        display: chartDatasets.length > 1,
         position: 'top' as const,
         labels: {
           boxWidth: 12,
@@ -81,19 +110,24 @@ export default function BarChart({
         display: !!title,
         text: title,
         font: {
-          size: 16,
-        }
+          size: 18,
+          weight: 'bold',
+        },
+        color: '#7c3aed',
+        padding: { top: 8, bottom: 16 },
       },
       tooltip: {
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        titleColor: '#1f2937',
-        bodyColor: '#4b5563',
-        borderColor: '#e5e7eb',
-        borderWidth: 1,
-        padding: 12,
-        boxWidth: 10,
-        boxHeight: 10,
+        backgroundColor: 'rgba(255,255,255,0.97)',
+        titleColor: '#7c3aed',
+        bodyColor: '#1e293b',
+        borderColor: '#7c3aed',
+        borderWidth: 1.5,
+        padding: 14,
+        boxWidth: 12,
+        boxHeight: 12,
         usePointStyle: true,
+        titleFont: { size: 16, weight: 'bold' },
+        bodyFont: { size: 15 },
         callbacks: {
           label: function(context) {
             let label = context.dataset.label || '';
@@ -101,8 +135,8 @@ export default function BarChart({
               label += ': ';
             }
             if (context.parsed.y !== null) {
-              label += new Intl.NumberFormat('es-MX', { 
-                style: 'currency', 
+              label += new Intl.NumberFormat('es-MX', {
+                style: 'currency',
                 currency: 'MXN',
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 0
@@ -120,14 +154,17 @@ export default function BarChart({
           display: !!yAxisLabel,
           text: yAxisLabel,
           font: {
-            size: 12,
-            weight: '500'
-          }
+            size: 13,
+            weight: 'bold'
+          },
+          color: '#7c3aed',
         },
         ticks: {
+          color: '#6366f1',
+          font: { size: 13 },
           callback: function(value) {
-            return new Intl.NumberFormat('es-MX', { 
-              style: 'currency', 
+            return new Intl.NumberFormat('es-MX', {
+              style: 'currency',
               currency: 'MXN',
               minimumFractionDigits: 0,
               maximumFractionDigits: 0
@@ -135,10 +172,14 @@ export default function BarChart({
           }
         },
         grid: {
-          color: 'rgba(226, 232, 240, 0.6)'
+          color: 'rgba(124,58,237,0.08)'
         }
       },
       x: {
+        ticks: {
+          color: '#6366f1',
+          font: { size: 13 },
+        },
         grid: {
           display: false
         }
@@ -146,8 +187,12 @@ export default function BarChart({
     },
     elements: {
       bar: {
-        borderRadius: 4
+        borderRadius: 10
       }
+    },
+    animation: {
+      duration: 900,
+      easing: 'easeOutQuart'
     }
   };
 
@@ -155,20 +200,6 @@ export default function BarChart({
   const mergedOptions = {
     ...defaultOptions,
     ...customOptions
-  };
-
-  // Datos formateados para Chart.js
-  const chartData = {
-    labels: chartLabels,
-    datasets: chartDatasets.map(dataset => ({
-      label: dataset.label,
-      data: dataset.data,
-      backgroundColor: dataset.backgroundColor || 'rgba(124, 58, 237, 0.7)',
-      borderColor: dataset.borderColor || 'rgb(124, 58, 237)',
-      borderWidth: dataset.borderWidth || 0,
-      borderRadius: 4,
-      maxBarThickness: 32
-    })),
   };
 
   return (

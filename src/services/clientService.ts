@@ -15,9 +15,9 @@ export const findClientByReference = async (reference: string): Promise<Client |
       .select('*')
       .eq('reference', reference.trim())
       .maybeSingle();
-    
+
     if (error) throw error;
-    
+
     return data;
   } catch (error) {
     console.error('Error al buscar cliente por referencia:', error);
@@ -41,9 +41,9 @@ export const createClient = async (
       .insert([{ name: name.trim(), reference: reference.trim() }])
       .select()
       .single();
-    
+
     if (error) throw error;
-    
+
     return data;
   } catch (error) {
     console.error('Error al crear cliente:', error);
@@ -63,9 +63,9 @@ export const getClientById = async (id: string): Promise<Client | null> => {
       .select('*')
       .eq('id', id)
       .single();
-    
+
     if (error) throw error;
-    
+
     return data;
   } catch (error) {
     console.error(`Error al obtener cliente con ID ${id}:`, error);
@@ -82,11 +82,11 @@ export const getOrCreateClient = async (reference: string): Promise<Client | nul
   try {
     // Buscar cliente existente
     const existingClient = await findClientByReference(reference);
-    
+
     if (existingClient) {
       return existingClient;
     }
-    
+
     // Crear nuevo cliente
     return await createClient(reference, reference);
   } catch (error) {
@@ -104,9 +104,9 @@ export const getTopClients = async (limit: number = 10): Promise<any[]> => {
   try {
     const { data, error } = await supabase
       .rpc('get_top_clients', { limit_count: limit });
-    
+
     if (error) throw error;
-    
+
     return data || [];
   } catch (error) {
     console.error('Error al obtener clientes frecuentes:', error);
@@ -124,9 +124,9 @@ export const getAllClients = async (): Promise<Client[]> => {
       .from('clients')
       .select('*')
       .order('name');
-    
+
     if (error) throw error;
-    
+
     return data || [];
   } catch (error) {
     console.error('Error al obtener todos los clientes:', error);
@@ -151,9 +151,9 @@ export const updateClient = async (
       .eq('id', id)
       .select()
       .single();
-    
+
     if (error) throw error;
-    
+
     return data;
   } catch (error) {
     console.error(`Error al actualizar cliente con ID ${id}:`, error);
