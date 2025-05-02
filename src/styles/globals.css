@@ -2,11 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --primary-color: #3B82F6;
-  --primary-hover: color-mix(in srgb, var(--primary-color) 85%, black);
-  --primary-light: color-mix(in srgb, var(--primary-color) 15%, white);
-}
+/* Eliminado --primary-color por defecto, ahora solo ThemeProvider controla el color */
 
 @layer base {
   body {

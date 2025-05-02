@@ -120,6 +120,8 @@ export default function SellerLoginPage({ onLogin }: SellerLoginPageProps) {
                   type="text"
                   required
                   maxLength={6}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   className="block w-full pl-10 pr-3 py-4 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-center text-2xl tracking-wider font-medium"
                   placeholder="123456"
                   value={code}

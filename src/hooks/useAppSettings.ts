@@ -14,9 +14,9 @@ interface AppSettingsRecord {
 type AppSettingsPayload = RealtimePostgresChangesPayload<AppSettingsRecord>;
 
 // Función para validar formato de color hexadecimal
-const isValidHexColor = (color: string): boolean => {
+export function isValidHexColor(color: string): boolean {
   return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color);
-};
+}
 
 // Función para convertir color a formato hexadecimal válido
 const normalizeColor = (color: string): string => {
@@ -38,7 +38,7 @@ const normalizeColor = (color: string): string => {
 
 export function useAppSettings() {
   const [settings, setSettings] = useState<AppSettings>({
-    primary_color: '#3B82F6', // Color por defecto azul
+    primary_color: '', // Sin color por defecto
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -124,8 +124,7 @@ export function useAppSettings() {
 
       if (error) {
         console.warn('Error al cargar configuración:', error);
-        // Si no hay datos, usar el color por defecto y seguir
-        applyColorWithTransition(settings.primary_color);
+        // Si no hay datos, no aplicar color por defecto
         return;
       }
 
@@ -136,21 +135,13 @@ export function useAppSettings() {
         setSettings(newSettings);
         applyColorWithTransition(data.value);
       } else {
-        // Si no hay datos, insertar el color por defecto
-        const { error: insertError } = await supabase
-          .from('app_settings')
-          .insert([{ key: 'primary_color', value: settings.primary_color }]);
-
-        if (insertError) {
-          console.error('Error al insertar configuración predeterminada:', insertError);
-        }
-        applyColorWithTransition(settings.primary_color);
+        // Si no hay datos, no insertar color por defecto
+        return;
       }
     } catch (error: any) {
       console.error('Error al cargar configuración:', error);
       setError('Error al cargar la configuración');
-      // Usar color por defecto en caso de error
-      applyColorWithTransition(settings.primary_color);
+      // No aplicar color por defecto en caso de error
     } finally {
       setIsLoading(false);
     }
