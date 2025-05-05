@@ -8,6 +8,7 @@ const Sellers = lazy(() => import('../pages/admin/Sellers'));
 const Clients = lazy(() => import('../pages/admin/Clients'));
 const Reports = lazy(() => import('../pages/admin/Reports'));
 const Settings = lazy(() => import('../pages/admin/Settings'));
+const Commissions = lazy(() => import('../pages/admin/Commissions'));
 
 export const adminRoutes = (
   <Route path="/admin" element={<AdminLayout />}>
@@ -17,5 +18,6 @@ export const adminRoutes = (
     <Route path="clients" element={<Clients />} />
     <Route path="reports" element={<Reports />} />
     <Route path="settings" element={<Settings />} />
+    <Route path="commissions" element={<Commissions />} />
   </Route>
 );

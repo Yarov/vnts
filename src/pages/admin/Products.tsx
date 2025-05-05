@@ -48,17 +48,17 @@ export default function Products() {
   const columns = [
     {
       header: 'Nombre',
-      accessor: (product: Product) => product.name
+      accessor: (product: Product) => (
+        <div className="flex flex-col gap-1">
+          <span className="text-lg font-semibold text-gray-800">{product.category || 'Sin categoría'}</span>
+          <p className="text-sm text-gray-600">{product.name}</p>
+        </div>
+      )
     },
     {
       header: 'Precio',
       accessor: (product: Product) => `${product.price.toFixed(2)}`,
       className: 'text-right'
-    },
-    {
-      header: 'Categoría',
-      accessor: (product: Product) => product.category ?? '',
-      hideOnMobile: true
     },
     {
       header: 'Estado',
@@ -94,10 +94,11 @@ export default function Products() {
             Editar
           </Button>
           <Button
-            variant="danger"
+            variant="outline"
             size="sm"
             onClick={() => confirmDeleteProduct(product.id)}
             icon={<TrashIcon className="h-4 w-4" />}
+            className="text-primary-600 hover:bg-primary-50 hover:border-primary-200 border-primary-200"
           >
             Eliminar
           </Button>
@@ -319,7 +320,7 @@ function MobileProductActions({ product, onEdit, onDelete, onToggleStatus }: {
             {product.active ? 'Desactivar' : 'Activar'}
           </button>
           <button
-            className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+            className="w-full flex items-center px-4 py-2 text-sm text-primary-600 hover:bg-primary-50"
             onClick={() => { setOpen(false); onDelete(); }}
           >
             <TrashIcon className="h-4 w-4 mr-2" /> Eliminar

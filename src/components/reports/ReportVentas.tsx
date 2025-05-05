@@ -12,7 +12,7 @@ import Input from '../ui/Input';
 import Badge from '../ui/Badge';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { useSalesReport } from '../../hooks/useSalesReport';
-import { DollarSign, ShoppingCart, CreditCard, Users, ChevronDown, ChevronUp, Download, RefreshCw, X } from 'lucide-react';
+import { DollarSign, Users, ChevronDown, ChevronUp, Download, RefreshCw, X } from 'lucide-react';
 import { exportSalesToExcel } from '../../utils/exportToExcel';
 import ReportCard from './ReportCard';
 
@@ -79,41 +79,6 @@ export default function ReportVentas() {
           iconColor="text-blue-600"
           iconBgColor="bg-blue-50"
         />
-
-        <ReportCard
-          title="Ticket Promedio"
-          value={formatCurrency(totals?.average_ticket ?? 0)}
-          subtitle="Por transacción"
-          icon={ShoppingCart}
-          iconColor="text-emerald-600"
-          iconBgColor="bg-emerald-50"
-          trend={{
-            value: totals?.average_ticket ?? 0,
-            isPositive: (totals?.average_ticket ?? 0) > 0
-          }}
-        />
-
-        <ReportCard
-          title="Métodos de Pago"
-          value={Object.keys(totals?.payment_methods ?? {}).length}
-          subtitle={`${Object.entries(totals?.payment_methods ?? {})
-            .sort(([,a], [,b]) => b - a)[0]?.[0] ?? 'Sin datos'}`}
-          icon={CreditCard}
-          iconColor="text-purple-600"
-          iconBgColor="bg-purple-50"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <ReportCard
-          title="Total Productos"
-          value={totals?.total_items ?? 0}
-          subtitle="Unidades vendidas"
-          icon={ShoppingCart}
-          iconColor="text-indigo-600"
-          iconBgColor="bg-indigo-50"
-        />
-
         <ReportCard
           title="Mejores Vendedores"
           value={totals?.top_sellers?.length ?? 0}

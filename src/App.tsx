@@ -21,6 +21,8 @@ import ClientsPage from './pages/admin/Clients';
 import ReportsPage from './pages/admin/Reports';
 import PaymentMethodsPage from './pages/admin/PaymentMethods';
 import SettingsPage from './pages/admin/Settings';
+import Commissions from './pages/admin/Commissions';
+import TopProducts from './pages/admin/TopProducts';
 
 // Seller Pages
 import SellerDashboard from './pages/seller/Dashboard';
@@ -121,6 +123,8 @@ function App() {
           <Route path="reports" element={<ReportsPage />} />
           <Route path="payment-methods" element={<PaymentMethodsPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="commissions" element={<Commissions />} />
+          <Route path="top-products" element={<TopProducts />} />
         </Route>
 
         {/* Seller Routes */}

@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { useAdminClients } from '../../hooks/useAdminClients';
 import {
   PlusIcon,
@@ -12,7 +13,6 @@ import Table from '../../components/ui/Table';
 import Button from '../../components/ui/Button';
 import FormField from '../../components/ui/FormField';
 import Modal from '../../components/ui/Modal';
-import { useState } from 'react';
 
 export default function Clients() {
   const {
@@ -45,7 +45,9 @@ export default function Clients() {
       header: 'Compras',
       accessor: (client: any) => {
         const stats = getClientStats(client.id);
-        return stats.purchase_count || 0;
+        return (
+          <span className="text-gray-800 font-medium">{stats.purchase_count || 0}</span>
+        );
       },
       className: 'text-center'
     },
@@ -53,9 +55,13 @@ export default function Clients() {
       header: 'Última compra',
       accessor: (client: any) => {
         const stats = getClientStats(client.id);
-        return stats.last_purchase
-          ? new Date(String(stats.last_purchase)).toLocaleDateString()
-          : 'Nunca';
+        return (
+          <span className="text-gray-600">
+            {stats.last_purchase
+              ? new Date(String(stats.last_purchase)).toLocaleDateString()
+              : 'Nunca'}
+          </span>
+        );
       }
     },
     {
@@ -71,10 +77,11 @@ export default function Clients() {
             Editar
           </Button>
           <Button
-            variant="danger"
+            variant="outline"
             size="sm"
             onClick={() => handleDeleteClient(client.id)}
             icon={<TrashIcon className="h-4 w-4" />}
+            className="text-primary-600 hover:bg-primary-50 hover:border-primary-200 border-primary-200"
           >
             Eliminar
           </Button>
@@ -86,13 +93,11 @@ export default function Clients() {
 
   return (
     <div>
-      <div className="md:flex md:items-center md:justify-between mb-6">
-        <div className="flex-1 min-w-0">
-          <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-            Gestión de Clientes
-          </h2>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold mb-1 text-gray-800">Gestión de Clientes</h2>
         </div>
-        <div className="mt-4 flex md:mt-0 md:ml-4">
+        <div className="mt-4 md:mt-0">
           <Button
             variant="primary"
             onClick={() => openClientModal()}
@@ -165,13 +170,33 @@ export default function Clients() {
         )}
       </div>
 
+      {/* Modal de creación/edición de cliente */}
       <Modal
         isOpen={isModalOpen}
         onClose={closeModal}
         title={currentClient?.id ? 'Editar Cliente' : 'Crear Nuevo Cliente'}
         size="md"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={closeModal}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={handleSaveClient}
+              isLoading={isSubmitting}
+            >
+              {currentClient?.id ? 'Guardar cambios' : 'Crear cliente'}
+            </Button>
+          </>
+        }
       >
-        <form onSubmit={handleSaveClient}>
+        <form onSubmit={(e) => { e.preventDefault(); handleSaveClient(e); }}>
           <FormField
             label="Nombre del cliente"
             name="name"
@@ -191,24 +216,6 @@ export default function Clients() {
               </div>
             }
           />
-          <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-            <Button
-              type="submit"
-              variant="primary"
-              isLoading={isSubmitting}
-              className="sm:col-start-2"
-            >
-              {currentClient?.id ? 'Guardar cambios' : 'Crear cliente'}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={closeModal}
-              className="mt-3 sm:mt-0 sm:col-start-1"
-            >
-              Cancelar
-            </Button>
-          </div>
         </form>
       </Modal>
     </div>
@@ -240,7 +247,7 @@ function MobileClientActions({ onEdit, onDelete }: {
             <PencilIcon className="h-4 w-4 mr-2" /> Editar
           </button>
           <button
-            className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+            className="w-full flex items-center px-4 py-2 text-sm text-primary-600 hover:bg-primary-50"
             onClick={() => { setOpen(false); onDelete(); }}
           >
             <TrashIcon className="h-4 w-4 mr-2" /> Eliminar

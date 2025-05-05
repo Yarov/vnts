@@ -42,12 +42,16 @@ export default function PaymentMethods() {
   const columns = [
     {
       header: 'Nombre',
-      accessor: (method: PaymentMethod) => method.name
+      accessor: (method: PaymentMethod) => (
+        <div className="flex flex-col gap-1">
+          <span className="text-lg font-semibold text-gray-800">{method.name}</span>
+        </div>
+      )
     },
     {
       header: 'Estado',
       accessor: (method: PaymentMethod) => (
-        <span className={`flex items-center ${method.active ? 'text-green-600' : 'text-red-600'}`}>
+        <span className={`flex items-center ${method.active ? 'text-primary-600' : 'text-gray-500'}`}>
           {method.active ? (
             <><CheckCircleIcon className="h-5 w-5 mr-1" /> Activo</>
           ) : (
@@ -65,6 +69,7 @@ export default function PaymentMethods() {
             size="sm"
             onClick={() => togglePaymentMethodStatus(method.id, method.active)}
             icon={method.active ? <XCircleIcon className="h-4 w-4" /> : <CheckCircleIcon className="h-4 w-4" />}
+            className={method.active ? "text-primary-600 hover:bg-primary-50 hover:border-primary-200 border-primary-200" : ""}
           >
             {method.active ? 'Desactivar' : 'Activar'}
           </Button>
@@ -77,10 +82,11 @@ export default function PaymentMethods() {
             Editar
           </Button>
           <Button
-            variant="danger"
+            variant="outline"
             size="sm"
             onClick={() => confirmDeletePaymentMethod(method.id)}
             icon={<TrashIcon className="h-4 w-4" />}
+            className="text-primary-600 hover:bg-primary-50 hover:border-primary-200 border-primary-200"
           >
             Eliminar
           </Button>
@@ -94,7 +100,7 @@ export default function PaymentMethods() {
     <div>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold mb-1">Gestión de Métodos de Pago</h2>
+          <h2 className="text-2xl font-bold mb-1 text-gray-800">Gestión de Métodos de Pago</h2>
         </div>
         <div className="mt-4 md:mt-0">
           <Button
@@ -110,13 +116,15 @@ export default function PaymentMethods() {
       {/* Tabla solo en desktop */}
       <div className="hidden md:block">
         <Card>
-          <Table
-            columns={columns}
-            data={paymentMethods}
-            keyExtractor={(item) => item.id}
-            isLoading={loading}
-            emptyMessage="No se encontraron métodos de pago"
-          />
+          <div className="overflow-x-auto">
+            <Table
+              columns={columns}
+              data={paymentMethods}
+              keyExtractor={(item) => item.id}
+              isLoading={loading}
+              emptyMessage="No se encontraron métodos de pago"
+            />
+          </div>
         </Card>
       </div>
 
@@ -136,6 +144,13 @@ export default function PaymentMethods() {
               <div className="flex items-center justify-between gap-2">
                 <div>
                   <div className="font-bold text-lg text-gray-800">{method.name}</div>
+                  <div className={`flex items-center text-sm mt-1 ${method.active ? 'text-primary-600' : 'text-gray-500'}`}>
+                    {method.active ? (
+                      <><CheckCircleIcon className="h-4 w-4 mr-1" /> Activo</>
+                    ) : (
+                      <><XCircleIcon className="h-4 w-4 mr-1" /> Inactivo</>
+                    )}
+                  </div>
                 </div>
                 {/* Menú de acciones */}
                 <MobilePaymentMethodActions
@@ -144,9 +159,6 @@ export default function PaymentMethods() {
                   onDelete={() => confirmDeletePaymentMethod(method.id)}
                   onToggleStatus={() => togglePaymentMethodStatus(method.id, method.active)}
                 />
-              </div>
-              <div className="flex items-center gap-3 mt-2">
-                <span className={`flex items-center text-xs ${method.active ? 'text-green-600' : 'text-red-600'}`}>{method.active ? <CheckCircleIcon className="h-4 w-4 mr-1" /> : <XCircleIcon className="h-4 w-4 mr-1" />}{method.active ? 'Activo' : 'Inactivo'}</span>
               </div>
             </Card>
           ))
@@ -254,7 +266,7 @@ function MobilePaymentMethodActions({ method, onEdit, onDelete, onToggleStatus }
             {method.active ? 'Desactivar' : 'Activar'}
           </button>
           <button
-            className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+            className="w-full flex items-center px-4 py-2 text-sm text-primary-600 hover:bg-primary-50"
             onClick={() => { setOpen(false); onDelete(); }}
           >
             <TrashIcon className="h-4 w-4 mr-2" /> Eliminar

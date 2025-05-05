@@ -21,6 +21,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'rec
 interface TopProductoItem {
   id: string;
   name: string;
+  category: string;
   quantity: number;
   total: number;
 }
@@ -205,27 +206,44 @@ const ReportResumenGeneral: React.FC<ReportResumenGeneralProps> = ({
       {/* Sección 4: Tablas de Top */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card title="Top Productos">
-          <div className="overflow-x-auto">
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Producto</TableHead>
-                  <TableHead className="text-right">Cantidad</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead>Unidades</TableHead>
+                  <TableHead>Total</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {topProductos.map((producto) => (
                   <TableRow key={producto.id}>
-                    <TableCell>{producto.name}</TableCell>
-                    <TableCell className="text-right">{producto.quantity}</TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(producto.total)}
+                    <TableCell>
+                      <div>
+                        <span>{producto.name}</span>
+                        <span className="text-xs text-gray-500 ml-2">({producto.category})</span>
+                      </div>
                     </TableCell>
+                    <TableCell>{producto.quantity}</TableCell>
+                    <TableCell>{formatCurrency(producto.total)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
+          </div>
+          {/* Mobile Cards */}
+          <div className="block md:hidden space-y-4">
+            {topProductos.map((producto) => (
+              <div key={producto.id} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <div className="font-bold text-lg text-gray-800">{producto.name}</div>
+                <div className="text-sm text-gray-500">{producto.category}</div>
+                <div className="flex justify-between mt-2">
+                  <span className="text-sm text-gray-600">Unidades: {producto.quantity}</span>
+                  <span className="text-sm font-medium text-gray-800">{formatCurrency(producto.total)}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </Card>
         <Card title="Top Clientes">
@@ -337,8 +355,8 @@ const ReportResumenGeneral: React.FC<ReportResumenGeneralProps> = ({
             </div>
           )}
 
-          {/* Tabla de comisiones */}
-          <div className="overflow-x-auto bg-white rounded-lg border border-gray-200">
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto bg-white rounded-lg border border-gray-200">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -393,6 +411,30 @@ const ReportResumenGeneral: React.FC<ReportResumenGeneralProps> = ({
                 )}
               </TableBody>
             </Table>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="block md:hidden space-y-4">
+            {isLoading ? (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-r-transparent"></div>
+              </div>
+            ) : commissions.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">No hay comisiones en este periodo</div>
+            ) : (
+              commissions.map((commission) => (
+                <div key={commission.seller_id} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                  <div className="font-bold text-lg text-gray-800">{commission.seller_name}</div>
+                  <div className="flex justify-between mt-2">
+                    <span className="text-sm text-gray-600">Ventas: {formatCurrency(commission.total_sales)}</span>
+                    <span className="text-sm font-medium text-purple-800">{commission.commission_percentage}%</span>
+                  </div>
+                  <div className="mt-2 text-sm font-medium text-emerald-600">
+                    Comisión: {formatCurrency(commission.commission_amount)}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </Card>
       </div>

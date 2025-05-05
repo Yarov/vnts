@@ -69,7 +69,7 @@ export default function Settings() {
   };
 
   const presetColors = [
-    '#3B82F6', // Blue
+    '#DA498D', // Rosa
     '#10B981', // Green
     '#8B5CF6', // Purple
     '#EF4444', // Red
