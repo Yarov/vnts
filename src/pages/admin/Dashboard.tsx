@@ -2,7 +2,6 @@ import {
   CurrencyDollarIcon,
   ReceiptPercentIcon,
   ShoppingBagIcon,
-  UserGroupIcon,
   CalendarIcon,
   ArrowRightIcon
 } from '@heroicons/react/24/outline';
@@ -11,7 +10,7 @@ import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
 import Badge from '../../components/ui/Badge';
 import { useAdminDashboard } from '../../hooks/useAdminDashboard';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 export default function Dashboard() {
   const {
@@ -19,13 +18,9 @@ export default function Dashboard() {
     salesSummary,
     topProducts,
     sellerCommissions,
-    topClients,
     currentDay,
-    formatCurrency: useAdminFormatCurrency,
-    formatDate: useAdminFormatDate
+    formatCurrency: useAdminFormatCurrency
   } = useAdminDashboard();
-
-  const navigate = useNavigate();
 
   // Columnas para tabla de productos
   const productColumns = [
@@ -39,25 +34,6 @@ export default function Dashboard() {
       header: 'Total',
       accessor: (item: any) => useAdminFormatCurrency(item.total),
       className: 'text-right font-medium'
-    }
-  ];
-
-  // Columnas para tabla de clientes
-  const clientColumns = [
-    { header: 'Cliente', accessor: 'name' },
-    {
-      header: 'Compras',
-      accessor: (item: any) => (
-        <Badge color="purple" className="mx-auto">
-          {item.purchase_count}
-        </Badge>
-      ),
-      className: 'text-center'
-    },
-    {
-      header: 'Última compra',
-      accessor: (item: any) => useAdminFormatDate(new Date(item.last_purchase), 'dd/MM/yyyy'),
-      className: 'text-center'
     }
   ];
 

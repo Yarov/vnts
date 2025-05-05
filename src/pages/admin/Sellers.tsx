@@ -27,76 +27,6 @@ export default function Sellers() {
     isDeletingSeller
   } = useAdminSellers();
 
-  const columns = [
-    {
-      header: 'Vendedor',
-      accessor: (seller: Seller) => (
-        <div className="flex flex-col gap-1">
-          <span className="text-lg font-semibold text-gray-800">{seller.name}</span>
-          <span className="text-sm text-gray-500">{seller.email}</span>
-        </div>
-      )
-    },
-    {
-      header: 'Teléfono',
-      accessor: (seller: Seller) => (
-        <span className="text-gray-600">{seller.phone || 'No especificado'}</span>
-      )
-    },
-    {
-      header: 'Comisión',
-      accessor: (seller: Seller) => (
-        <span className="text-gray-800 font-medium">{seller.commission_percentage}%</span>
-      )
-    },
-    {
-      header: 'Estado',
-      accessor: (seller: Seller) => (
-        <span className={`flex items-center ${seller.active ? 'text-primary-600' : 'text-gray-500'}`}>
-          {seller.active ? (
-            <><CheckCircleIcon className="h-5 w-5 mr-1" /> Activo</>
-          ) : (
-            <><XCircleIcon className="h-5 w-5 mr-1" /> Inactivo</>
-          )}
-        </span>
-      )
-    },
-    {
-      header: 'Acciones',
-      accessor: (seller: Seller) => (
-        <div className="flex space-x-2 justify-end">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => toggleSellerStatus(seller.id, seller.active)}
-            icon={seller.active ? <XCircleIcon className="h-4 w-4" /> : <CheckCircleIcon className="h-4 w-4" />}
-            className={seller.active ? "text-primary-600 hover:bg-primary-50 hover:border-primary-200 border-primary-200" : ""}
-          >
-            {seller.active ? 'Desactivar' : 'Activar'}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => openSellerModal(seller)}
-            icon={<PencilIcon className="h-4 w-4" />}
-          >
-            Editar
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => confirmDeleteSeller(seller.id)}
-            icon={<TrashIcon className="h-4 w-4" />}
-            className="text-primary-600 hover:bg-primary-50 hover:border-primary-200 border-primary-200"
-          >
-            Eliminar
-          </Button>
-        </div>
-      ),
-      className: 'text-right'
-    },
-  ];
-
   return (
     <div>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
@@ -122,7 +52,7 @@ export default function Sellers() {
               <thead className="bg-gray-50">
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendedor</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
                   <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Comisión</th>
                   <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
@@ -149,11 +79,10 @@ export default function Sellers() {
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
                           <span className="text-lg font-semibold text-gray-800">{seller.name}</span>
-                          <span className="text-sm text-gray-500">{seller.email}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-gray-600">{seller.phone || 'No especificado'}</span>
+                        <span className="text-gray-600">{seller.numeric_code}</span>
                       </td>
                       <td className="px-6 py-4 text-center">
                         <span className="text-gray-800 font-medium">{seller.commission_percentage}%</span>
@@ -222,8 +151,7 @@ export default function Sellers() {
               <div className="flex items-center justify-between gap-2">
                 <div>
                   <div className="font-bold text-lg text-gray-800">{seller.name}</div>
-                  <div className="text-sm text-gray-500">{seller.email}</div>
-                  <div className="text-sm text-gray-600 mt-1">{seller.phone || 'No especificado'}</div>
+                  <div className="text-sm text-gray-500">Código: {seller.numeric_code}</div>
                   <div className="flex items-center gap-4 mt-2">
                     <div className="text-sm font-medium text-gray-800">
                       Comisión: {seller.commission_percentage}%
@@ -286,20 +214,12 @@ export default function Sellers() {
             required
           />
           <FormField
-            label="Email"
-            name="email"
-            type="email"
-            value={currentSeller?.email || ''}
+            label="Código de acceso"
+            name="numeric_code"
+            value={currentSeller?.numeric_code || ''}
             onChange={handleInputChange}
-            error={formErrors.email}
+            error={formErrors.numeric_code}
             required
-          />
-          <FormField
-            label="Teléfono"
-            name="phone"
-            value={currentSeller?.phone || ''}
-            onChange={handleInputChange}
-            error={formErrors.phone}
           />
           <FormField
             label="Porcentaje de comisión"

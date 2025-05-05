@@ -14,6 +14,7 @@ type GroupedProduct = {
   name: string;
   quantity: number;
   total: number;
+  category?: string;
 };
 
 interface SaleItem {

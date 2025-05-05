@@ -1,4 +1,3 @@
-import React from 'react';
 import { useAdminReports } from '../../hooks/useAdminReports';
 import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';

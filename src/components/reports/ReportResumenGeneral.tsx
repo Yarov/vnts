@@ -21,9 +21,9 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'rec
 interface TopProductoItem {
   id: string;
   name: string;
-  category: string;
   quantity: number;
   total: number;
+  category?: string;
 }
 
 interface TopClienteItem {
@@ -222,7 +222,9 @@ const ReportResumenGeneral: React.FC<ReportResumenGeneralProps> = ({
                     <TableCell>
                       <div>
                         <span>{producto.name}</span>
-                        <span className="text-xs text-gray-500 ml-2">({producto.category})</span>
+                        {producto.category && (
+                          <span className="text-xs text-gray-500 ml-2">({producto.category})</span>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>{producto.quantity}</TableCell>
@@ -237,7 +239,9 @@ const ReportResumenGeneral: React.FC<ReportResumenGeneralProps> = ({
             {topProductos.map((producto) => (
               <div key={producto.id} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                 <div className="font-bold text-lg text-gray-800">{producto.name}</div>
-                <div className="text-sm text-gray-500">{producto.category}</div>
+                {producto.category && (
+                  <div className="text-sm text-gray-500">{producto.category}</div>
+                )}
                 <div className="flex justify-between mt-2">
                   <span className="text-sm text-gray-600">Unidades: {producto.quantity}</span>
                   <span className="text-sm font-medium text-gray-800">{formatCurrency(producto.total)}</span>
