@@ -1,28 +1,63 @@
-# VNTS - Aplicación de Control de Ingresos para Negocios
+# 🛒 VNTS - Sistema de Ventas Profesional
 
-Una aplicación web moderna desarrollada con Vite, React, TypeScript y Tailwind CSS para el control de ingresos de negocios, gestión de productos, vendedores y clientes.
+Sistema completo de punto de venta con gestión de productos, vendedores, sucursales y reportes en tiempo real.
 
-## Características
+## 🏗️ Arquitectura
 
-- **Autenticación dual**: Admin con usuario/contraseña y vendedores con código numérico
-- **Gestión completa**: Productos, vendedores (con comisiones), clientes y métodos de pago
-- **Registro de ventas**: Interfaz intuitiva para vendedores
-- **Reportes**: Análisis detallado para administradores
-- **Diseño responsive**: Funciona en dispositivos móviles y de escritorio
+```
+vnts/
+├── frontend/          # React + Vite + TypeScript + Tailwind
+├── backend/           # Django + PostgreSQL + REST API
+├── docker-compose.*   # Orquestación de servicios
+└── DEPLOYMENT.md      # Guía completa de despliegue
+```
 
-## Tecnologías Utilizadas
+## ✨ Características
 
-- **Frontend**: Vite, React, TypeScript, Tailwind CSS
-- **Estado**: Jotai para gestión de estado global
-- **Backend**: Supabase (Auth, Database, Storage)
-- **Gráficos**: Chart.js para visualizaciones
-- **UI Components**: Componentes personalizados basados en Tailwind
+### 👨‍💼 Para Administradores
+- ✅ Dashboard con estadísticas en tiempo real
+- ✅ Gestión de productos con asignación por sucursal
+- ✅ Control de vendedores y comisiones
+- ✅ Gestión de múltiples sucursales
+- ✅ Reportes detallados de ventas
+- ✅ Configuración de métodos de pago
 
-## Requisitos Previos
+### 🏪 Para Vendedores
+- ✅ Login con código numérico
+- ✅ Selección de sucursal al iniciar sesión
+- ✅ Registro rápido de ventas
+- ✅ Vista de productos filtrados por sucursal
+- ✅ Historial de ventas personal
+- ✅ Dashboard con comisiones del día
 
-- Node.js 16.x o superior
-- npm o yarn
-- Una cuenta en [Supabase](https://supabase.com)
+## 🚀 Tecnologías
+
+### Frontend
+- **Framework**: React 18 + Vite
+- **Lenguaje**: TypeScript
+- **Estilos**: Tailwind CSS
+- **Estado**: Jotai
+- **Routing**: React Router v6
+- **Gráficos**: Chart.js
+- **Iconos**: Heroicons
+
+### Backend
+- **Framework**: Django 4.2
+- **Base de Datos**: PostgreSQL 15
+- **API**: Django REST Framework
+- **Autenticación**: JWT + Session
+- **CORS**: django-cors-headers
+
+### DevOps
+- **Contenedores**: Docker + Docker Compose
+- **Web Server**: Nginx (producción)
+- **WSGI**: Gunicorn (producción)
+
+## 📋 Requisitos
+
+- Docker Desktop
+- Docker Compose
+- Git
 
 ## Configuración del Proyecto
 
@@ -33,53 +68,56 @@ git clone https://github.com/tu-usuario/vnts.git
 cd vnts
 ```
 
-### 2. Instalar dependencias
+### 2. Iniciar en Desarrollo
 
 ```bash
-npm install
-# o
-yarn install
+# Opción 1: Script automático
+chmod +x start-dev.sh
+./start-dev.sh
+
+# Opción 2: Manual
+docker compose -f docker-compose.dev.yml up -d
 ```
 
-### 3. Configurar Supabase
+**Acceder a la aplicación:**
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8000
+- Admin Django: http://localhost:8000/admin
 
-1. Crea un nuevo proyecto en [Supabase](https://supabase.com)
-2. En tu proyecto de Supabase, ve a SQL Editor
-3. Ejecuta el script de creación de la base de datos que se encuentra en `database_schema.sql`
-4. Habilita la autenticación por email en Authentication > Providers
-5. Crea un usuario administrador en Authentication > Users
-6. Ejecuta el script `admin_setup.sql` para configurar el usuario admin (reemplaza 'ID_DEL_USUARIO_DE_AUTH' con el UUID del usuario creado)
-7. Opcionalmente, ejecuta `add_test_seller.sql` para crear un vendedor de prueba
-
-### 4. Configurar variables de entorno
-
-1. Crea un archivo `.env.local` en la raíz del proyecto
-2. Añade las siguientes variables con tus credenciales de Supabase:
-
-```
-VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
-VITE_SUPABASE_ANON_KEY=tu-clave-anon-de-supabase
-```
-
-3. También puedes editar directamente estas variables en `src/lib/supabase.ts`
-
-### 5. Ejecutar el proyecto en modo desarrollo
+### 3. Crear Superusuario
 
 ```bash
-npm run dev
-# o
-yarn dev
+docker compose -f docker-compose.dev.yml exec backend python manage.py createsuperuser
 ```
 
-La aplicación estará disponible en `http://localhost:3000`
-
-### 6. Construir para producción
+### 4. Detener Servicios
 
 ```bash
-npm run build
-# o
-yarn build
+docker compose -f docker-compose.dev.yml down
 ```
+
+## 🚀 Despliegue en Producción
+
+### 1. Configurar Variables de Entorno
+
+```bash
+cp .env.production.example .env.production
+nano .env.production
+```
+
+### 2. Desplegar
+
+```bash
+# Opción 1: Script automático
+chmod +x start-prod.sh
+./start-prod.sh
+
+# Opción 2: Manual
+docker compose -f docker-compose.prod.yml build
+docker compose -f docker-compose.prod.yml up -d
+```
+
+**Ver guía completa en:** [DEPLOYMENT.md](DEPLOYMENT.md)
 
 ## Estructura del Proyecto
 
